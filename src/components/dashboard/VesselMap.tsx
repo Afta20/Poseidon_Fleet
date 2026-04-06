@@ -52,20 +52,25 @@ interface MapProps {
 // Component to handle imperative map updates
 const MapUpdater = ({ vessels, selectedVesselId }: { vessels: VesselWithLatestLog[], selectedVesselId?: string | null }) => {
   const map = useMap();
+  const prevSelectedRef = React.useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    if (selectedVesselId) {
-      const selected = vessels.find(v => v.id === selectedVesselId);
-      if (selected && selected.latestLog.lat && selected.latestLog.lng) {
-        map.flyTo([selected.latestLog.lat, selected.latestLog.lng], 6, {
-          duration: 1.5
+    // Only trigger map movement if the selectedVesselId has explicitly changed
+    if (selectedVesselId !== prevSelectedRef.current) {
+      if (selectedVesselId) {
+        const selected = vessels.find(v => v.id === selectedVesselId);
+        if (selected && selected.latestLog.lat && selected.latestLog.lng) {
+          map.flyTo([selected.latestLog.lat, selected.latestLog.lng], 6, {
+            duration: 1.5
+          });
+        }
+      } else if (prevSelectedRef.current !== undefined && vessels.length > 0) {
+        // Optional: zoom out to fit all or go back to center when explicitly deselected
+        map.flyTo([vessels[0].latestLog.lat, vessels[0].latestLog.lng], 3, {
+           duration: 1.5
         });
       }
-    } else if (vessels.length > 0) {
-       // Optional: zoom out to fit all or go back to center when deselected
-       map.flyTo([vessels[0].latestLog.lat, vessels[0].latestLog.lng], 3, {
-          duration: 1.5
-       });
+      prevSelectedRef.current = selectedVesselId;
     }
   }, [selectedVesselId, vessels, map]);
 

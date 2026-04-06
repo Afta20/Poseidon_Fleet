@@ -11,8 +11,8 @@ export const FleetList: React.FC<{
 }> = ({ vessels, loading, onSelectVessel, selectedVesselId }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-        {[...Array(3)].map((_, i) => (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+        {[...Array(4)].map((_, i) => (
           <div key={i} className="h-40 bg-zinc-900 rounded-xl animate-pulse glow-border"></div>
         ))}
       </div>
@@ -20,7 +20,7 @@ export const FleetList: React.FC<{
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
       {vessels.map(vessel => {
         const isLost = vessel.status === 'Signal Lost';
         const isDelayed = vessel.status === 'Delayed';
