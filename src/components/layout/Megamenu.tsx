@@ -41,7 +41,7 @@ export const Megamenu = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   return (
-    <nav className="relative z-50 w-full bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/10 text-white shadow-neon-text">
+    <nav className="relative z-[999] w-full bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/10 text-white shadow-neon-text">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
@@ -89,15 +89,21 @@ export const Megamenu = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-16 left-1/2 -translate-x-1/2 w-64 bg-[#121217] border border-primary/40 rounded-lg p-4 glow-border"
+                      className="absolute top-16 left-1/2 -translate-x-1/2 w-64 bg-[#121217] border border-primary/40 rounded-lg p-4 glow-border shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
                     >
                       <ul className="space-y-3">
                         {item.submenus.map((sub, idx) => (
-                          <li key={idx} className="flex items-center text-gray-300 hover:text-primary transition-colors cursor-pointer group">
-                            <span className="p-1 rounded-md bg-white/5 group-hover:bg-primary/20 mr-3">
-                              {sub.icon}
-                            </span>
-                            <span className="font-mono text-sm">{sub.label}</span>
+                          <li key={idx}>
+                            <Link 
+                              href="#" 
+                              className="flex items-center text-gray-300 hover:text-primary transition-colors cursor-pointer group"
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              <span className="p-1 rounded-md bg-white/5 group-hover:bg-primary/20 mr-3">
+                                {sub.icon}
+                              </span>
+                              <span className="font-mono text-sm">{sub.label}</span>
+                            </Link>
                           </li>
                         ))}
                       </ul>
