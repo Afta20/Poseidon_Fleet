@@ -3,7 +3,12 @@ import { VesselWithLatestLog } from '@/types';
 import { AlertCircle, WifiOff, Ship, Battery, Navigation, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const FleetList: React.FC<{ vessels: VesselWithLatestLog[]; loading: boolean }> = ({ vessels, loading }) => {
+export const FleetList: React.FC<{ 
+  vessels: VesselWithLatestLog[]; 
+  loading: boolean;
+  onSelectVessel?: (id: string) => void;
+  selectedVesselId?: string | null;
+}> = ({ vessels, loading, onSelectVessel, selectedVesselId }) => {
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
@@ -34,12 +39,21 @@ export const FleetList: React.FC<{ vessels: VesselWithLatestLog[]; loading: bool
           statusShadow = 'drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]'; // Yellow glow
         }
 
+        // Highlight if selected
+        const isSelected = selectedVesselId === vessel.id;
+        if (isSelected) {
+          cardClass += ' ring-2 ring-primary ring-offset-2 ring-offset-[#0a0a0c] scale-[1.02] z-10';
+        } else {
+          cardClass += ' hover:border-primary/50 cursor-pointer';
+        }
+
         return (
           <motion.div
             key={vessel.id}
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`rounded-xl p-5 relative overflow-hidden transition-all duration-500 ${cardClass}`}
+            animate={{ opacity: 1, scale: isSelected ? 1.02 : 1 }}
+            onClick={() => onSelectVessel?.(vessel.id)}
+            className={`rounded-xl p-5 relative transition-all duration-500 ${cardClass}`}
           >
             {/* Header */}
             <div className="flex justify-between items-start mb-4">

@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useState } from 'react';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { FleetList } from '@/components/dashboard/FleetList';
 import { VesselMap } from '@/components/dashboard/VesselMapWrapper';
@@ -8,6 +8,7 @@ import { useVesselStream } from '@/hooks/useVesselStream';
 
 export default function Home() {
   const { vessels, loading } = useVesselStream();
+  const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white overflow-x-hidden selection:bg-primary/50">
@@ -21,7 +22,7 @@ export default function Home() {
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2 glow-border"></span>
               Live Fleet Map
             </h2>
-            <VesselMap vessels={vessels} />
+            <VesselMap vessels={vessels} selectedVesselId={selectedVesselId} />
           </div>
           <div className="space-y-6">
             <h2 className="text-xl font-bold mb-4 shadow-neon-text">Analytics</h2>
@@ -42,7 +43,7 @@ export default function Home() {
         {/* Bottom Section: Fleet Overview */}
         <div className="mt-8">
           <h2 className="text-xl font-bold px-6 shadow-neon-text">Active Vessels Overview</h2>
-          <FleetList vessels={vessels} loading={loading} />
+          <FleetList vessels={vessels} loading={loading} onSelectVessel={setSelectedVesselId} selectedVesselId={selectedVesselId} />
         </div>
       </div>
     </main>

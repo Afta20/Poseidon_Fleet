@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VesselWithLatestLog } from '@/types';
@@ -46,9 +46,33 @@ const getVesselIcon = (vessel: VesselWithLatestLog) => {
 
 interface MapProps {
   vessels: VesselWithLatestLog[];
+  selectedVesselId?: string | null;
 }
 
-const VesselMapComponent: React.FC<MapProps> = ({ vessels }) => {
+// Component to handle imperative map updates
+const MapUpdater = ({ vessels, selectedVesselId }: { vessels: VesselWithLatestLog[], selectedVesselId?: string | null }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (selectedVesselId) {
+      const selected = vessels.find(v => v.id === selectedVesselId);
+      if (selected && selected.latestLog.lat && selected.latestLog.lng) {
+        map.flyTo([selected.latestLog.lat, selected.latestLog.lng], 6, {
+          duration: 1.5
+        });
+      }
+    } else if (vessels.length > 0) {
+       // Optional: zoom out to fit all or go back to center when deselected
+       map.flyTo([vessels[0].latestLog.lat, vessels[0].latestLog.lng], 3, {
+          duration: 1.5
+       });
+    }
+  }, [selectedVesselId, vessels, map]);
+
+  return null;
+};
+
+const VesselMapComponent: React.FC<MapProps> = ({ vessels, selectedVesselId }) => {
   // Try to center on first active vessel, else default center
   const centerPosition: [number, number] = vessels.length > 0 
     ? [vessels[0].latestLog.lat, vessels[0].latestLog.lng]
@@ -62,6 +86,7 @@ const VesselMapComponent: React.FC<MapProps> = ({ vessels }) => {
         style={{ height: '100%', width: '100%', background: '#0a0a0c' }}
         attributionControl={false}
       >
+        <MapUpdater vessels={vessels} selectedVesselId={selectedVesselId} />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />

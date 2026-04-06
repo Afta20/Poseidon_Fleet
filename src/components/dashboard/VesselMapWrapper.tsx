@@ -14,6 +14,7 @@ const VesselMapComponent = dynamic(() => import('./VesselMap'), {
 
 interface MapProps {
   vessels: VesselWithLatestLog[];
+  selectedVesselId?: string | null;
 }
 
 export const VesselMap = (props: MapProps) => {
