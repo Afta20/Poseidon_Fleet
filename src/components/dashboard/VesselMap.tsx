@@ -5,35 +5,44 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VesselWithLatestLog } from '@/types';
 
-// Custom Map Marker Icon using electric purple neon theme
-const CustomIcon = new L.DivIcon({
-  className: 'custom-icon',
-  html: `<div style="
-    background-color: #a855f7;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    box-shadow: 0 0 10px 2px rgba(168, 85, 247, 0.8), 0 0 20px rgba(168, 85, 247, 0.4);
-    border: 2px solid white;
-  "></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7]
-});
+// Custom Map Marker Icon generator based on vessel type
+const getVesselIcon = (vessel: VesselWithLatestLog) => {
+  let color = '#a855f7'; // default purple
+  let glowColor = 'rgba(168, 85, 247, 0.8)';
+  let outerGlow = 'rgba(168, 85, 247, 0.4)';
 
-const LostIcon = new L.DivIcon({
-  className: 'custom-icon-lost',
-  html: `<div style="
-    background-color: #ef4444; /* red-500 */
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.8);
-    border: 2px solid white;
-    opacity: 0.8;
-  "></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7]
-});
+  if (vessel.type === 'Tanker') {
+    color = '#4ade80'; // green-400
+    glowColor = 'rgba(74, 222, 128, 0.8)';
+    outerGlow = 'rgba(74, 222, 128, 0.4)';
+  } else if (vessel.type === 'Cargo') {
+    color = '#facc15'; // yellow-400
+    glowColor = 'rgba(250, 204, 21, 0.8)';
+    outerGlow = 'rgba(250, 204, 21, 0.4)';
+  } else if (vessel.type === 'Passenger') {
+    color = '#ef4444'; // red-500
+    glowColor = 'rgba(239, 68, 68, 0.8)';
+    outerGlow = 'rgba(239, 68, 68, 0.4)';
+  }
+
+  const isLost = vessel.status === 'Signal Lost';
+  const opacity = isLost ? 0.6 : 1;
+
+  return new L.DivIcon({
+    className: isLost ? 'custom-icon-lost' : 'custom-icon',
+    html: `<div style="
+      background-color: ${color};
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px 2px ${glowColor}, 0 0 20px ${outerGlow};
+      border: 2px solid white;
+      opacity: ${opacity};
+    "></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+};
 
 interface MapProps {
   vessels: VesselWithLatestLog[];
@@ -59,7 +68,6 @@ const VesselMapComponent: React.FC<MapProps> = ({ vessels }) => {
         {vessels.map(vessel => {
           const lat = vessel.latestLog.lat;
           const lng = vessel.latestLog.lng;
-          const isLost = vessel.status === 'Signal Lost';
           
           if (!lat || !lng) return null;
           
@@ -67,11 +75,12 @@ const VesselMapComponent: React.FC<MapProps> = ({ vessels }) => {
             <Marker 
               key={vessel.id} 
               position={[lat, lng]} 
-              icon={isLost ? LostIcon : CustomIcon}
+              icon={getVesselIcon(vessel)}
             >
               <Popup className="dark-popup">
                 <div className="bg-[#121217] text-white p-2 rounded-md font-sans">
                   <h4 className="font-bold text-primary">{vessel.name}</h4>
+                  <p className="text-xs font-mono mt-1 text-zinc-400 capitalize">{vessel.type}</p>
                   <p className="text-xs font-mono mt-1 text-zinc-300">Status: {vessel.status}</p>
                   <p className="text-xs font-mono mt-1 text-zinc-300">Speed: {vessel.latestLog.speed.toFixed(1)} KN</p>
                 </div>
