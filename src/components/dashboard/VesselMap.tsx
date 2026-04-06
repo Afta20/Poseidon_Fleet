@@ -47,6 +47,7 @@ const getVesselIcon = (vessel: VesselWithLatestLog) => {
 interface MapProps {
   vessels: VesselWithLatestLog[];
   selectedVesselId?: string | null;
+  mapMode?: string;
 }
 
 // Component to handle imperative map updates
@@ -77,48 +78,70 @@ const MapUpdater = ({ vessels, selectedVesselId }: { vessels: VesselWithLatestLo
   return null;
 };
 
-const VesselMapComponent: React.FC<MapProps> = ({ vessels, selectedVesselId }) => {
+const VesselMapComponent: React.FC<MapProps> = ({ vessels, selectedVesselId, mapMode }) => {
   // Try to center on first active vessel, else default center
   const centerPosition: [number, number] = vessels.length > 0 
     ? [vessels[0].latestLog.lat, vessels[0].latestLog.lng]
     : [20, 0];
 
+  let mapFilterClass = '';
+  if (mapMode === 'Weather Overlay') {
+     mapFilterClass = 'hue-rotate-90 saturate-200 contrast-125 brightness-75'; // Bluish rough tones
+  } else if (mapMode === 'Traffic Density') {
+     mapFilterClass = 'sepia-[.8] hue-rotate-[320deg] saturate-200 '; // Reddish hot maps
+  }
+
   return (
-    <div className="w-full h-[400px] rounded-xl overflow-hidden border border-white/10 glow-border z-0">
-      <MapContainer 
-        center={centerPosition} 
-        zoom={3} 
-        style={{ height: '100%', width: '100%', background: '#0a0a0c' }}
-        attributionControl={false}
-      >
-        <MapUpdater vessels={vessels} selectedVesselId={selectedVesselId} />
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
-        {vessels.map(vessel => {
-          const lat = vessel.latestLog.lat;
-          const lng = vessel.latestLog.lng;
-          
-          if (!lat || !lng) return null;
-          
-          return (
-            <Marker 
-              key={vessel.id} 
-              position={[lat, lng]} 
-              icon={getVesselIcon(vessel)}
-            >
-              <Popup className="dark-popup">
-                <div className="bg-[#121217] text-white p-2 rounded-md font-sans">
-                  <h4 className="font-bold text-primary">{vessel.name}</h4>
-                  <p className="text-xs font-mono mt-1 text-zinc-400 capitalize">{vessel.type}</p>
-                  <p className="text-xs font-mono mt-1 text-zinc-300">Status: {vessel.status}</p>
-                  <p className="text-xs font-mono mt-1 text-zinc-300">Speed: {vessel.latestLog.speed.toFixed(1)} KN</p>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
+    <div className="w-full h-[400px] rounded-xl overflow-hidden border border-white/10 glow-border z-0 relative">
+      {mapMode === 'Weather Overlay' && (
+         <div className="absolute top-4 right-4 z-[400] bg-blue-500/20 border border-blue-500/50 backdrop-blur-md p-2 rounded-lg pointer-events-none data-mock-weather flex flex-col items-end">
+             <span className="text-xs font-mono text-blue-300 font-bold tracking-widest">STORM SYSTEM DETECTED</span>
+             <span className="text-[10px] text-blue-200 uppercase">Sector 4V • Heavy Rain</span>
+         </div>
+      )}
+      {mapMode === 'Traffic Density' && (
+         <div className="absolute top-4 right-4 z-[400] bg-red-500/20 border border-red-500/50 backdrop-blur-md p-2 rounded-lg pointer-events-none data-mock-traffic flex flex-col items-end">
+             <span className="text-xs font-mono text-red-300 font-bold tracking-widest">HIGH TRAFFIC VOL</span>
+             <span className="text-[10px] text-red-200 uppercase">120+ Vessels in proximity</span>
+         </div>
+      )}
+
+      <div className={`w-full h-full transition-all duration-1000 ${mapFilterClass}`}>
+        <MapContainer 
+          center={centerPosition} 
+          zoom={3} 
+          style={{ height: '100%', width: '100%', background: '#0a0a0c' }}
+          attributionControl={false}
+        >
+          <MapUpdater vessels={vessels} selectedVesselId={selectedVesselId} />
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+          {vessels.map(vessel => {
+            const lat = vessel.latestLog.lat;
+            const lng = vessel.latestLog.lng;
+            
+            if (!lat || !lng) return null;
+            
+            return (
+              <Marker 
+                key={vessel.id} 
+                position={[lat, lng]} 
+                icon={getVesselIcon(vessel)}
+              >
+                <Popup className="dark-popup">
+                  <div className="bg-[#121217] text-white p-2 rounded-md font-sans">
+                    <h4 className="font-bold text-primary">{vessel.name}</h4>
+                    <p className="text-xs font-mono mt-1 text-zinc-400 capitalize">{vessel.type}</p>
+                    <p className="text-xs font-mono mt-1 text-zinc-300">Status: {vessel.status}</p>
+                    <p className="text-xs font-mono mt-1 text-zinc-300">Speed: {vessel.latestLog.speed.toFixed(1)} KN</p>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
+      </div>
       <style jsx global>{`
         .leaflet-popup-content-wrapper {
              background: #121217;

@@ -10,9 +10,10 @@ const MENU_ITEMS = [
     label: 'Fleet',
     icon: <Ship size={18} className="mr-2" />,
     submenus: [
-      { label: 'Tanker Vessels', icon: <Anchor size={14} className="mr-2" /> },
-      { label: 'Cargo Vessels', icon: <Anchor size={14} className="mr-2" /> },
-      { label: 'Passenger Lines', icon: <Anchor size={14} className="mr-2" /> },
+      { label: 'All Vessels', icon: <Anchor size={14} className="mr-2" />, action: 'all' },
+      { label: 'Tanker Vessels', icon: <Anchor size={14} className="mr-2" />, action: 'Tanker' },
+      { label: 'Cargo Vessels', icon: <Anchor size={14} className="mr-2" />, action: 'Cargo' },
+      { label: 'Passenger Lines', icon: <Anchor size={14} className="mr-2" />, action: 'Passenger' },
     ]
   },
   {
@@ -20,9 +21,9 @@ const MENU_ITEMS = [
     label: 'Map',
     icon: <MapIcon size={18} className="mr-2" />,
     submenus: [
-      { label: 'Regional View', icon: <Compass size={14} className="mr-2" /> },
-      { label: 'Weather Overlay', icon: <Compass size={14} className="mr-2" /> },
-      { label: 'Traffic Density', icon: <Compass size={14} className="mr-2" /> },
+      { label: 'Regional View', icon: <Compass size={14} className="mr-2" />, action: 'Regional View' },
+      { label: 'Weather Overlay', icon: <Compass size={14} className="mr-2" />, action: 'Weather Overlay' },
+      { label: 'Traffic Density', icon: <Compass size={14} className="mr-2" />, action: 'Traffic Density' },
     ]
   },
   {
@@ -30,14 +31,18 @@ const MENU_ITEMS = [
     label: 'Analytics',
     icon: <BarChart3 size={18} className="mr-2" />,
     submenus: [
-      { label: 'Fuel Efficiency', icon: <Navigation size={14} className="mr-2" /> },
-      { label: 'Maintenance Schedule', icon: <Navigation size={14} className="mr-2" /> },
-      { label: 'Crew Logs', icon: <Navigation size={14} className="mr-2" /> },
+      { label: 'Fuel Efficiency', icon: <Navigation size={14} className="mr-2" />, action: 'Fuel Efficiency' },
+      { label: 'Maintenance Schedule', icon: <Navigation size={14} className="mr-2" />, action: 'Maintenance' },
+      { label: 'Crew Logs', icon: <Navigation size={14} className="mr-2" />, action: 'Crew Logs' },
     ]
   }
 ];
 
-export const Megamenu = () => {
+interface MegamenuProps {
+  onMenuClick?: (key: string, action: string) => void;
+}
+
+export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   return (
@@ -97,7 +102,12 @@ export const Megamenu = () => {
                             <Link 
                               href="#" 
                               className="flex items-center text-gray-300 hover:text-primary transition-colors cursor-pointer group"
-                              onClick={(e) => e.preventDefault()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (onMenuClick && sub.action) {
+                                  onMenuClick(item.key, sub.action);
+                                }
+                              }}
                             >
                               <span className="p-1 rounded-md bg-white/5 group-hover:bg-primary/20 mr-3">
                                 {sub.icon}
