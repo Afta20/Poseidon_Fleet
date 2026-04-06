@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model Route {
+  id        String   @id @default(uuid())
+  name      String
+  vessels   Vessel[]
+}
+
+model Vessel {
+  id        String   @id @default(uuid())
+  name      String
+  type      String   // Tanker, Cargo, Passenger
+  status    String   // En Route, In Port, Delayed, Maintenance
+  logs      Log[]
+  route     Route?   @relation(fields: [routeId], references: [id])
+  routeId   String?
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  vesselId  String
+  vessel    Vessel   @relation(fields: [vesselId], references: [id])
+  fuelLevel Int
+  speed     Float
+  lat       Float
+  lng       Float
+  timestamp DateTime @default(now())
+}
