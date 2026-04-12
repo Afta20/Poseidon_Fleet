@@ -13,8 +13,8 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "umkm_unyu-unyu",
-  description: "Dashboard for umkm_unyu-unyu",
+  title: "Poseidon Fleet",
+  description: "Dashboard for Poseidon Fleet - Maritime Fleet Monitoring System",
 };
 
 export default function RootLayout({

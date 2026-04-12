@@ -57,7 +57,7 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
               <Compass className="text-primary glow-border rounded-full" size={24} />
             </motion.div>
             <span className="font-sans font-bold text-xl tracking-widest text-[#f4f4f5] shadow-neon-text">
-              UMKM<span className="text-primary font-mono ml-1">UNYU-UNYU</span>
+              POSEIDON<span className="text-primary font-mono ml-1">FLEET</span>
             </span>
           </div>
 
