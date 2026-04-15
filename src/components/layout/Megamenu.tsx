@@ -89,12 +89,15 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
   } else {
     // Public / not logged in — landing page menu
     dynamicMenuItems = [
-      { key: 'calculator', label: 'Kalkulator Ongkir', icon: <Calculator size={18} className="mr-2" />, submenus: [] },
+      { key: 'calculator', label: 'Estimasi Tarif', icon: <Calculator size={18} className="mr-2" />, submenus: [] },
     ];
     if (session?.role === 'CUSTOMER') {
       dynamicMenuItems.push({ key: 'customer', label: 'Dashboard Saya', icon: <Package size={18} className="mr-2" />, submenus: [] });
     }
   }
+
+  // Prepend Home link to all modes to allow easy return to landing page
+  dynamicMenuItems.unshift({ key: '', label: 'Beranda', icon: <Compass size={18} className="mr-2" />, submenus: [] });
 
   return (
     <nav className="relative z-[999] w-full bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/10 text-white shadow-neon-text">
@@ -123,7 +126,9 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
                 <Link href={`/${item.key}`} className={`flex items-center transition-colors duration-200 ${activeMenu === item.key ? 'text-primary' : 'text-gray-300 hover:text-white'}`}>
                   {item.icon}
                   <span className="font-semibold">{item.label}</span>
-                  <ChevronDown size={14} className={`ml-1 transition-transform ${activeMenu === item.key ? 'rotate-180' : ''}`} />
+                  {item.submenus.length > 0 && (
+                    <ChevronDown size={14} className={`ml-1 transition-transform ${activeMenu === item.key ? 'rotate-180' : ''}`} />
+                  )}
                 </Link>
 
                 {/* Animated Bottom Border Glow */}
@@ -137,9 +142,9 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
                   />
                 )}
 
-                {/* Megamenu Dropdown */}
+                {/* Megamenu Dropdown - Only show if submenus exist */}
                 <AnimatePresence>
-                  {activeMenu === item.key && (
+                  {activeMenu === item.key && item.submenus.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
