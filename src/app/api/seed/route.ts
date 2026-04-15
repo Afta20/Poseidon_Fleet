@@ -1,30 +1,43 @@
-import { PrismaClient } from '@prisma/client'
 import { NextResponse } from 'next/server'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
+import bcrypt from 'bcryptjs'
 
 export async function GET() {
   try {
     // Clear existing
-    await prisma.log.deleteMany()
-    await prisma.vessel.deleteMany()
-    await prisma.route.deleteMany()
+    await db.log.deleteMany()
+    await db.crew.deleteMany()
+    await db.vessel.deleteMany()
+    await db.route.deleteMany()
+    await db.user.deleteMany()
+
+    // Create Admin
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const adminUser = await db.user.create({
+      data: {
+        email: 'admin@poseidon.fleet',
+        password: hashedPassword,
+        name: 'Super Admin',
+        role: 'ADMIN'
+      }
+    });
 
     // Create routes
-    const routePacific = await prisma.route.create({
+    const routePacific = await db.route.create({
       data: { name: 'Trans-Pacific Route' },
     })
     
-    const routeAtlantic = await prisma.route.create({
+    const routeAtlantic = await db.route.create({
       data: { name: 'Trans-Atlantic Route' },
     })
 
     // Create vessels
-    const v1 = await prisma.vessel.create({
+    const v1 = await db.vessel.create({
       data: {
         name: 'Prime Alpha',
         type: 'Tanker',
         status: 'En Route',
+        payload: '100.000 Barel Minyak Mentah',
         routeId: routePacific.id,
         logs: {
           create: {
@@ -37,11 +50,12 @@ export async function GET() {
       }
     })
 
-    const v2 = await prisma.vessel.create({
+    const v2 = await db.vessel.create({
       data: {
         name: 'Titan Freight',
         type: 'Cargo',
         status: 'Delayed',
+        payload: 'Suku Cadang Otomotif (2000 TEU)',
         routeId: routeAtlantic.id,
         logs: {
           create: {
@@ -54,11 +68,12 @@ export async function GET() {
       }
     })
 
-    const v3 = await prisma.vessel.create({
+    const v3 = await db.vessel.create({
       data: {
         name: 'Ocean Voyager',
         type: 'Passenger',
         status: 'Maintenance',
+        payload: '1500 Penumpang & Barang Bawaan',
         routeId: routePacific.id,
         logs: {
           create: {
@@ -71,11 +86,12 @@ export async function GET() {
       }
     })
 
-    const v4 = await prisma.vessel.create({
+    const v4 = await db.vessel.create({
       data: {
         name: 'Neptune Horizon',
         type: 'Tanker',
         status: 'En Route',
+        payload: 'Gas Alam Cair (LNG) Tekanan Tinggi',
         routeId: routePacific.id,
         logs: {
           create: {

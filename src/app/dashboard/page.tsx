@@ -8,7 +8,7 @@ import { MaintenanceModule, CrewLogsModule } from '@/components/dashboard/Analyt
 import { useVesselStream } from '@/hooks/useVesselStream';
 
 export default function DashboardPage() {
-  const { vessels, loading } = useVesselStream();
+  const { vessels, loading, refetch } = useVesselStream();
   const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<string>('Regional View');
@@ -70,7 +70,7 @@ export default function DashboardPage() {
         {/* Bottom Section: Fleet Overview */}
         <div className="mt-8">
           <h2 className="text-xl font-bold px-6 shadow-neon-text">Active Vessels Overview</h2>
-          <FleetList vessels={displayedVessels} loading={loading} onSelectVessel={setSelectedVesselId} selectedVesselId={selectedVesselId} />
+          <FleetList vessels={displayedVessels} loading={loading} onSelectVessel={setSelectedVesselId} selectedVesselId={selectedVesselId} onRefetch={refetch} />
         </div>
       </div>
     </main>

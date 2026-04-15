@@ -22,9 +22,20 @@ model Vessel {
   name      String
   type      String   // Tanker, Cargo, Passenger
   status    String   // En Route, In Port, Delayed, Maintenance
+  payload   String?  // Storage for Cargo/Manifest Description
   logs      Log[]
   route     Route?   @relation(fields: [routeId], references: [id])
   routeId   String?
+  crews     Crew[]
+  shipments Shipment[]
+}
+
+model Crew {
+  id        String   @id @default(uuid())
+  name      String
+  position  String
+  vessel    Vessel?  @relation(fields: [vesselId], references: [id])
+  vesselId  String?
 }
 
 model Log {
@@ -35,5 +46,56 @@ model Log {
   speed     Float
   lat       Float
   lng       Float
+  incident  String?
   timestamp DateTime @default(now())
+}
+
+enum Role {
+  CUSTOMER
+  MONITORING
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(CUSTOMER)
+  shipments Shipment[] @relation("CustomerShipments")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Shipment {
+  id          String   @id // Tracking ID / Resi (Custom Format: PFXXXXXX)
+  title       String
+  description String?
+  weight      Float
+  volume      Float?
+  type        String   // FCL, LCL
+  origin      String
+  destination String
+  status      String   // PENDING, APPROVED, IN_TRANSIT, ARRIVED, REJECTED
+  cost        Float?
+  
+  customerId  String
+  customer    User     @relation("CustomerShipments", fields: [customerId], references: [id])
+  
+  vesselId    String?
+  vessel      Vessel?  @relation(fields: [vesselId], references: [id])
+  
+  events      TrackingEvent[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TrackingEvent {
+  id          String   @id @default(uuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  location    String
+  status      String
+  description String?
+  timestamp   DateTime @default(now())
 }

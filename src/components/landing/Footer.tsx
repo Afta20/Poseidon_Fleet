@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-zinc-500 text-sm leading-relaxed max-w-xs">
-              Solusi monitoring armada kapal terdepan di Indonesia. Pantau, analisa, dan kelola seluruh armada Anda dari satu platform.
+              Solusi logistik maritim global terpercaya. Menghubungkan setiap sudut dunia dengan layanan kargo laut yang aman dan transparan.
             </p>
           </div>
 
@@ -27,9 +27,10 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3">
               {[
                 { label: 'Beranda', href: '#hero' },
-                { label: 'Tentang Kami', href: '#tentang' },
-                { label: 'Layanan', href: '#layanan' },
-                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Tentang Perusahaan', href: '#tentang' },
+                { label: 'Layanan Logistik', href: '#layanan' },
+                { label: 'Lacak Kargo', href: '#hero' },
+                { label: 'Kalkulator Tarif', href: '/calculator' },
               ].map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-zinc-500 hover:text-primary transition-colors text-sm">

@@ -1,23 +1,23 @@
 "use client"
 import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Building2, Target, Eye, Shield, Users, Globe } from 'lucide-react';
+import { Globe, Target, Eye, Shield, Users, Anchor } from 'lucide-react';
 
 const COMPANY_VALUES = [
   {
     icon: <Shield size={22} />,
-    title: 'Keamanan',
-    description: 'Menjamin keselamatan seluruh awak dan armada melalui monitoring 24/7.',
+    title: 'Keamanan Kargo',
+    description: 'Menjamin keselamatan muatan Anda dengan standar kontainer internasional dan asuransi penuh.',
   },
   {
     icon: <Users size={22} />,
-    title: 'Profesionalisme',
-    description: 'Tim ahli maritim berpengalaman dengan standar internasional.',
+    title: 'Konektivitas Global',
+    description: 'Jaringan agen logistik di ratusan pelabuhan utama dunia untuk kelancaran distibusi.',
   },
   {
     icon: <Globe size={22} />,
-    title: 'Inovasi',
-    description: 'Mengadopsi teknologi terkini untuk efisiensi operasional.',
+    title: 'Inovasi Digital',
+    description: 'Platform tracking berbasis satelit yang memberikan visibilitas total di tengah samudra.',
   },
 ];
 
@@ -26,7 +26,7 @@ export const AboutSection: React.FC = () => {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section id="tentang" className="relative py-24 sm:py-32 overflow-hidden">
+    <section id="tentang" className="relative py-24 sm:py-32 overflow-hidden bg-[#050507]">
       {/* Subtle background accent */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(168,85,247,0.06)_0%,transparent_50%)]" />
 
@@ -39,14 +39,14 @@ export const AboutSection: React.FC = () => {
           className="text-center mb-16"
         >
           <div className="inline-flex items-center px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-6">
-            <Building2 size={14} className="text-primary mr-2" />
-            <span className="text-xs font-mono text-primary tracking-wider uppercase">Profil Perusahaan</span>
+            <Anchor size={14} className="text-primary mr-2" />
+            <span className="text-xs font-mono text-primary tracking-wider uppercase">Visi Dunia</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white shadow-neon-text mb-4">
             Tentang <span className="gradient-text">Poseidon Fleet</span>
           </h2>
           <p className="text-zinc-400 max-w-2xl mx-auto text-lg leading-relaxed">
-            Perusahaan penyedia solusi monitoring dan manajemen armada kapal terdepan di Indonesia.
+            Menghubungkan Benua, Menggerakkan Ekonomi Dunia Melalui Jalur Maritim.
           </p>
         </motion.div>
 
@@ -61,17 +61,15 @@ export const AboutSection: React.FC = () => {
           >
             <div className="bg-[#121217] rounded-2xl p-8 border border-white/5 hover:border-primary/20 transition-colors duration-500">
               <p className="text-zinc-300 leading-relaxed text-base">
-                <span className="text-white font-semibold">Poseidon Fleet</span> berdiri sejak tahun 2020
-                dengan visi menjadi perusahaan monitoring armada kapal terdepan di Asia Tenggara.
-                Berbekal pengalaman di industri maritim, kami mengembangkan platform yang memungkinkan
-                pemilik kapal dan operator logistik untuk memantau seluruh armada secara real-time
-                dari satu dashboard terintegrasi.
+                <span className="text-white font-semibold">Poseidon Fleet</span> adalah gerbang Anda menuju pasar global. 
+                Berawal dari operator armada lokal, kini kami telah berevolusi menjadi raksasa logistik maritim yang melayani 
+                pengiriman kargo lintas benua. Kami memahami bahwa setiap peti kemas adalah masa depan bisnis Anda.
               </p>
               <div className="my-6 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
               <p className="text-zinc-400 leading-relaxed text-base">
-                Dengan teknologi pelacakan satelit dan analitik data canggih, kami membantu klien
-                mengoptimalkan rute pelayaran, mengurangi konsumsi bahan bakar hingga 30%, serta
-                meningkatkan keselamatan awak kapal melalui sistem peringatan dini yang responsif.
+                Dengan armada kapal modern dan sistem pelacakan satelit tercanggih, kami memastikan barang Anda melintasi 
+                samudra dengan rute paling efisien. Jangkauan kami mencakup pelabuhan utama di Asia, Eropa, Amerika, dan Australia, 
+                menjadikan jarak bukan lagi hambatan bagi pertumbuhan bisnis internasional Anda.
               </p>
             </div>
 
@@ -87,10 +85,10 @@ export const AboutSection: React.FC = () => {
                   <div className="p-2 rounded-lg bg-primary/10 text-primary mr-3">
                     <Eye size={18} />
                   </div>
-                  <h3 className="font-bold text-white text-sm">Visi</h3>
+                  <h3 className="font-bold text-white text-sm uppercase tracking-wider">Visi</h3>
                 </div>
                 <p className="text-zinc-400 text-sm leading-relaxed">
-                  Menjadi platform monitoring armada maritim #1 di Asia Tenggara dengan teknologi terdepan dan pelayanan terbaik.
+                  Menjadi penyedia logistik maritim paling terintegrasi dan berkelanjutan di dunia.
                 </p>
               </motion.div>
 
@@ -104,10 +102,10 @@ export const AboutSection: React.FC = () => {
                   <div className="p-2 rounded-lg bg-primary/10 text-primary mr-3">
                     <Target size={18} />
                   </div>
-                  <h3 className="font-bold text-white text-sm">Misi</h3>
+                  <h3 className="font-bold text-white text-sm uppercase tracking-wider">Misi</h3>
                 </div>
                 <p className="text-zinc-400 text-sm leading-relaxed">
-                  Menyediakan solusi teknologi yang mudah diakses, akurat, dan andal untuk setiap pelaku usaha maritim di Indonesia.
+                  Menyediakan layanan pengiriman laut yang cepat, transparan, dan aman untuk menjembatani perdagangan global.
                 </p>
               </motion.div>
             </div>
@@ -120,7 +118,7 @@ export const AboutSection: React.FC = () => {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="space-y-5"
           >
-            <h3 className="text-lg font-semibold text-white mb-2">Nilai Perusahaan</h3>
+            <h3 className="text-lg font-semibold text-white mb-2 font-mono tracking-widest uppercase">Global Standards</h3>
             {COMPANY_VALUES.map((value, idx) => (
               <motion.div
                 key={value.title}
@@ -141,12 +139,12 @@ export const AboutSection: React.FC = () => {
               </motion.div>
             ))}
 
-            {/* Company highlight stats row */}
+            {/* Global highlight stats row */}
             <div className="grid grid-cols-3 gap-3 pt-4">
               {[
-                { num: '4+', label: 'Tahun' },
-                { num: '50+', label: 'Klien' },
-                { num: '24/7', label: 'Monitoring' },
+                { num: '50+', label: 'Negara' },
+                { num: '200+', label: 'Pelabuhan' },
+                { num: '1M+', label: 'Ton Kargo' },
               ].map((stat, idx) => (
                 <motion.div
                   key={stat.label}
@@ -156,7 +154,7 @@ export const AboutSection: React.FC = () => {
                   className="text-center p-4 rounded-xl bg-[#121217] border border-white/5"
                 >
                   <div className="text-2xl font-bold font-mono text-primary">{stat.num}</div>
-                  <div className="text-xs text-zinc-500 mt-1">{stat.label}</div>
+                  <div className="text-[10px] text-zinc-500 mt-1 uppercase tracking-tighter">{stat.label}</div>
                 </motion.div>
               ))}
             </div>

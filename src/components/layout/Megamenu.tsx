@@ -1,8 +1,9 @@
 "use client"
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Ship, Map as MapIcon, BarChart3, ChevronDown, Anchor, Compass, Navigation } from 'lucide-react';
+import { Ship, Map as MapIcon, BarChart3, ChevronDown, Anchor, Compass, Navigation, Calculator, Package } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const MENU_ITEMS = [
   {
@@ -38,12 +39,62 @@ const MENU_ITEMS = [
   }
 ];
 
+import { useSession } from '@/hooks/useSession';
+import { UserCog } from 'lucide-react'; // Add icon for Admin
+import { usePathname } from 'next/navigation';
+
 interface MegamenuProps {
   onMenuClick?: (key: string, action: string) => void;
 }
 
 export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const { session } = useSession();
+  const pathname = usePathname();
+
+  // Build menu based on role — each role sees a COMPLETELY DIFFERENT interface
+  let dynamicMenuItems: typeof MENU_ITEMS = [];
+
+  if (pathname.startsWith('/admin')) {
+    // Admin internal view
+    dynamicMenuItems = [{
+      key: 'dashboard',
+      label: 'Kembali ke Dashboard',
+      icon: <Navigation size={18} className="mr-2" />,
+      submenus: []
+    }];
+  } else if (pathname.startsWith('/customer')) {
+    // Customer portal menu
+    dynamicMenuItems = [
+      { key: 'customer', label: 'Dashboard Saya', icon: <Package size={18} className="mr-2" />, submenus: [] },
+      { key: 'customer/booking', label: 'Pesan Pengiriman', icon: <Ship size={18} className="mr-2" />, submenus: [] },
+      { key: 'calculator', label: 'Kalkulator Ongkir', icon: <Calculator size={18} className="mr-2" />, submenus: [] },
+    ];
+  } else if (session?.role === 'MONITORING' || (session?.role === 'ADMIN' && !pathname.startsWith('/admin'))) {
+    // Monitoring dashboard menu (full fleet tools)
+    dynamicMenuItems = [...MENU_ITEMS];
+    if (session?.role === 'ADMIN') {
+      dynamicMenuItems.push({
+        key: 'admin',
+        label: 'Admin Panel',
+        icon: <UserCog size={18} className="mr-2" />,
+        submenus: [
+          { label: 'Manage Crew', icon: <Anchor size={14} className="mr-2" />, action: 'crew' },
+          { label: 'Manage Users', icon: <MapIcon size={14} className="mr-2" />, action: 'users' },
+          { label: 'Bookings / Kargo', icon: <Package size={14} className="mr-2" />, action: 'bookings' },
+          { label: 'AI Reports', icon: <BarChart3 size={14} className="mr-2" />, action: 'reports' },
+        ]
+      });
+    }
+  } else {
+    // Public / not logged in — landing page menu
+    dynamicMenuItems = [
+      { key: 'calculator', label: 'Kalkulator Ongkir', icon: <Calculator size={18} className="mr-2" />, submenus: [] },
+    ];
+    if (session?.role === 'CUSTOMER') {
+      dynamicMenuItems.push({ key: 'customer', label: 'Dashboard Saya', icon: <Package size={18} className="mr-2" />, submenus: [] });
+    }
+  }
 
   return (
     <nav className="relative z-[999] w-full bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/10 text-white shadow-neon-text">
@@ -52,9 +103,9 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
           <div className="flex items-center space-x-2">
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+              transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
             >
-              <Compass className="text-primary glow-border rounded-full" size={24} />
+              <Image src="/favico.png" alt="Logo" width={28} height={28} className="glow-border rounded-full" />
             </motion.div>
             <span className="font-sans font-bold text-xl tracking-widest text-[#f4f4f5] shadow-neon-text">
               POSEIDON<span className="text-primary font-mono ml-1">FLEET</span>
@@ -62,7 +113,7 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
           </div>
 
           <div className="hidden md:flex items-center h-full space-x-1">
-            {MENU_ITEMS.map((item) => (
+            {dynamicMenuItems.map((item) => (
               <div 
                 key={item.key} 
                 className="h-full relative flex items-center px-4 cursor-pointer"
@@ -104,6 +155,10 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
                               className="flex items-center text-gray-300 hover:text-primary transition-colors cursor-pointer group"
                               onClick={(e) => {
                                 e.preventDefault();
+                                if (item.key === 'admin' && !pathname.startsWith('/admin')) {
+                                   window.location.href = `/admin?tab=${sub.action}`;
+                                   return;
+                                }
                                 if (onMenuClick && sub.action) {
                                   onMenuClick(item.key, sub.action);
                                 }
@@ -122,6 +177,18 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
                 </AnimatePresence>
               </div>
             ))}
+            
+            {session && (
+              <button 
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/login';
+                }}
+                className="ml-4 px-4 py-2 text-sm font-semibold text-red-400 border border-red-500/50 hover:bg-red-500/20 rounded-lg transition-all duration-200 glow-border font-mono tracking-wider"
+              >
+                LOGOUT
+              </button>
+            )}
           </div>
         </div>
       </div>

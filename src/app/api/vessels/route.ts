@@ -118,6 +118,13 @@ export async function GET() {
         logs: {
           orderBy: { timestamp: 'desc' },
           take: 1,
+        },
+        shipments: {
+          where: { status: { not: 'REJECTED' } },
+          include: {
+            customer: { select: { name: true } }
+          },
+          orderBy: { createdAt: 'desc' }
         }
       }
     });
