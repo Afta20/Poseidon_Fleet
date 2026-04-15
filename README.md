@@ -42,20 +42,10 @@ Dibuat dengan standar industri modern untuk performa dan skalabilitas tinggi:
 * **Frontend:** Next.js (App Router) dengan TypeScript untuk pengembangan yang *type-safe*.
 * **Styling:** Tailwind CSS & Lucide Icons untuk antarmuka yang modern dan bersih.
 * **Backend:** Next.js API Routes & Prisma ORM.
-* **Database:** PostgreSQL (Ready for high-concurrency maritime data).
+* **Database:** Neon.
 * **State Management:** React Hooks & Custom Streaming Logic untuk data kapal.
 
----
 
-## 🎨 Galeri Antarmuka
-
-| Dashboard Utama | Peta Armada | Analisis Bahan Bakar |
-| :--- | :--- | :--- |
-| ![Dashboard](https://via.placeholder.com/300x180?text=Executive+Overview) | ![Map](https://via.placeholder.com/300x180?text=Live+Vessel+Map) | ![Charts](https://via.placeholder.com/300x180?text=Fuel+Consumption+Chart) |
-
-> *Catatan: Antarmuka menggunakan desain "Maritime Blue" yang memberikan kesan profesional, tenang, dan terpercaya.*
-
----
 
 ## 🏗️ Struktur Proyek
 
