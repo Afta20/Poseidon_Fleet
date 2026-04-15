@@ -42,7 +42,7 @@ Dibuat dengan standar industri modern untuk performa dan skalabilitas tinggi:
 * **Frontend:** Next.js (App Router) dengan TypeScript untuk pengembangan yang *type-safe*.
 * **Styling:** Tailwind CSS & Lucide Icons untuk antarmuka yang modern dan bersih.
 * **Backend:** Next.js API Routes & Prisma ORM.
-* **Database:** Neon.
+* **Database:** Neon Serverless Postgress.
 * **State Management:** React Hooks & Custom Streaming Logic untuk data kapal.
 
 
