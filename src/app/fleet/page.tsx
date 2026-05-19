@@ -1,10 +1,11 @@
 "use client"
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { Ship, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { FleetList } from '@/components/dashboard/FleetList';
 import { useVesselStream } from '@/hooks/useVesselStream';
+import { CardSkeleton } from '@/components/ui/CardSkeleton';
 
 export default function FleetPage() {
   const { vessels, loading } = useVesselStream();
@@ -25,7 +26,9 @@ export default function FleetPage() {
         <p className="text-zinc-400 font-mono text-sm leading-relaxed mb-6">
            Modul khusus pangkalan armada. Komandan dapat melihat status operasional seluruh kapal yang terdaftar di sistem.
         </p>
-        <FleetList vessels={vessels} loading={loading} />
+        <Suspense fallback={<CardSkeleton count={4} columns={2} />}>
+          <FleetList vessels={vessels} loading={loading} />
+        </Suspense>
       </div>
     </main>
   );

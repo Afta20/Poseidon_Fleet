@@ -1,11 +1,17 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Ship, RefreshCw } from 'lucide-react';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { Pagination } from '@/components/ui/Pagination';
+
+const ITEMS_PER_PAGE = 5;
 
 export const BookingCrud = () => {
    const [shipments, setShipments] = useState<any[]>([]);
    const [vessels, setVessels] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
+   const [searchQuery, setSearchQuery] = useState('');
+   const [currentPage, setCurrentPage] = useState(1);
 
    const fetchData = async () => {
       setLoading(true);
@@ -25,9 +31,7 @@ export const BookingCrud = () => {
       }
    };
 
-   useEffect(() => {
-      fetchData();
-   }, []);
+   useEffect(() => { fetchData(); }, []);
 
    const updateStatus = async (id: string, newStatus: string, vesselId?: string) => {
       try {
@@ -42,14 +46,47 @@ export const BookingCrud = () => {
       }
    };
 
+   // Search filter
+   const filteredShipments = shipments.filter(s => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+         s.title?.toLowerCase().includes(q) ||
+         s.id?.toLowerCase().includes(q) ||
+         s.customer?.name?.toLowerCase().includes(q) ||
+         s.customer?.email?.toLowerCase().includes(q) ||
+         s.origin?.toLowerCase().includes(q) ||
+         s.destination?.toLowerCase().includes(q) ||
+         s.status?.toLowerCase().includes(q)
+      );
+   });
+
+   const totalPages = Math.ceil(filteredShipments.length / ITEMS_PER_PAGE);
+   const paginatedShipments = filteredShipments.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+   );
+
+   const handleSearchChange = useCallback((value: string) => {
+      setSearchQuery(value);
+      setCurrentPage(1);
+   }, []);
+
    if (loading) return <div className="p-8 text-center"><RefreshCw className="animate-spin inline-block mr-2" /> Loading data...</div>;
 
    return (
       <div className="space-y-6">
-         <h2 className="text-2xl font-sans font-bold flex items-center mb-6">
-            <Package className="mr-3 text-primary" />
-            Manajemen Pesanan Kargo
-         </h2>
+         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 className="text-2xl font-sans font-bold flex items-center">
+               <Package className="mr-3 text-primary" />
+               Manajemen Pesanan Kargo
+            </h2>
+            <SearchInput
+               value={searchQuery}
+               onChange={handleSearchChange}
+               placeholder="Search by title, ID, customer, route..."
+            />
+         </div>
 
          <div className="bg-[#121217] border border-white/10 rounded-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)]">
             <table className="w-full text-left text-sm">
@@ -63,7 +100,11 @@ export const BookingCrud = () => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-white/10">
-                  {shipments.map(s => (
+                  {paginatedShipments.length === 0 ? (
+                     <tr><td colSpan={5} className="px-6 py-8 text-center text-zinc-500 font-mono">
+                        {searchQuery ? `No results for "${searchQuery}"` : 'Belum ada data pesanan.'}
+                     </td></tr>
+                  ) : paginatedShipments.map(s => (
                      <tr key={s.id} className="hover:bg-white/5 transition-colors">
                         <td className="px-6 py-4">
                            <p className="font-bold">{s.title}</p>
@@ -90,21 +131,17 @@ export const BookingCrud = () => {
                                  </div>
                               ) : (
                                  <>
-                                    <span className={`text-xs px-2 py-1 rounded w-fit ${s.status === 'ARRIVED' ? 'bg-green-500/20 text-green-400' : 'bg-primary/20 text-primary'}`}>{s.status}</span>
-                                    
+                                    <span className={`text-xs px-2 py-1 rounded w-fit ${s.status === 'ARRIVED' ? 'bg-green-500/20 text-green-400' : s.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' : 'bg-primary/20 text-primary'}`}>{s.status}</span>
                                     {s.status !== 'REJECTED' && s.status !== 'ARRIVED' && (
-                                       <select 
+                                       <select
                                           className="text-xs bg-black border border-white/20 p-1 rounded text-white max-w-[150px]"
                                           onChange={(e) => updateStatus(s.id, s.status, e.target.value)}
                                           value={s.vesselId || ''}
                                        >
                                           <option value="">-- Assign Kapal --</option>
-                                          {vessels.map(v => (
-                                             <option key={v.id} value={v.id}>{v.name} ({v.type})</option>
-                                          ))}
+                                          {vessels.map(v => (<option key={v.id} value={v.id}>{v.name} ({v.type})</option>))}
                                        </select>
                                     )}
-
                                     {s.status === 'APPROVED' && s.vesselId && (
                                        <button onClick={() => updateStatus(s.id, 'IN_TRANSIT')} className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded hover:bg-blue-500/40 w-fit">Set Ke Berangkat</button>
                                     )}
@@ -117,11 +154,14 @@ export const BookingCrud = () => {
                         </td>
                      </tr>
                   ))}
-                  {shipments.length === 0 && (
-                     <tr><td colSpan={5} className="px-6 py-8 text-center text-zinc-500">Belum ada data pesanan.</td></tr>
-                  )}
                </tbody>
             </table>
+
+            {filteredShipments.length > 0 && (
+               <div className="px-6 pb-4">
+                  <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredShipments.length} itemsPerPage={ITEMS_PER_PAGE} />
+               </div>
+            )}
          </div>
       </div>
    );

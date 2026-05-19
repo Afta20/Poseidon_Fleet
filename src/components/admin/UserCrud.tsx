@@ -1,12 +1,18 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { Pagination } from '@/components/ui/Pagination';
+
+const ITEMS_PER_PAGE = 5;
 
 export const UserCrud = () => {
    const [users, setUsers] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
    const [formData, setFormData] = useState({ email: '', name: '', password: '', role: 'CUSTOMER', id: '' });
    const [isEditing, setIsEditing] = useState(false);
+   const [searchQuery, setSearchQuery] = useState('');
+   const [currentPage, setCurrentPage] = useState(1);
 
    const fetchUsers = async () => {
       setLoading(true);
@@ -51,6 +57,30 @@ export const UserCrud = () => {
       if (res.ok) fetchUsers();
    };
 
+   // Search filter
+   const filteredUsers = users.filter(user => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+         user.name?.toLowerCase().includes(q) ||
+         user.email?.toLowerCase().includes(q) ||
+         user.role?.toLowerCase().includes(q)
+      );
+   });
+
+   // Pagination
+   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+   const paginatedUsers = filteredUsers.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+   );
+
+   // Reset to page 1 when search changes
+   const handleSearchChange = useCallback((value: string) => {
+      setSearchQuery(value);
+      setCurrentPage(1);
+   }, []);
+
    return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          {/* Form */}
@@ -90,36 +120,64 @@ export const UserCrud = () => {
          </div>
 
          {/* Tabel */}
-         <div className="lg:col-span-2 overflow-x-auto bg-[#1a1a21] border border-white/5 rounded-xl">
-            <table className="w-full text-left text-sm text-zinc-400">
-               <thead className="bg-black/40 text-zinc-300 uppercase font-mono text-xs">
-                  <tr>
-                     <th className="px-5 py-4">Name</th>
-                     <th className="px-5 py-4">Email</th>
-                     <th className="px-5 py-4">Role</th>
-                     <th className="px-5 py-4 text-right">Actions</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  {loading ? (
-                     <tr><td colSpan={4} className="text-center py-10">Fetching secure records...</td></tr>
-                  ) : users.map(user => (
-                     <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="px-5 py-4 text-white font-medium">{user.name}</td>
-                        <td className="px-5 py-4 font-mono text-xs">{user.email}</td>
-                        <td className="px-5 py-4">
-                           <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-widest ${user.role === 'ADMIN' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>
-                              {user.role}
-                           </span>
-                        </td>
-                        <td className="px-5 py-4 text-right flex justify-end space-x-2">
-                           <button onClick={() => handleEdit(user)} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-white transition-colors"><Pencil size={14} /></button>
-                           <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
-                        </td>
+         <div className="lg:col-span-2 bg-[#1a1a21] border border-white/5 rounded-xl">
+            {/* Search Bar */}
+            <div className="p-4 border-b border-white/5">
+               <SearchInput
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  placeholder="Search by name, email, or role..."
+               />
+            </div>
+
+            <div className="overflow-x-auto">
+               <table className="w-full text-left text-sm text-zinc-400">
+                  <thead className="bg-black/40 text-zinc-300 uppercase font-mono text-xs">
+                     <tr>
+                        <th className="px-5 py-4">Name</th>
+                        <th className="px-5 py-4">Email</th>
+                        <th className="px-5 py-4">Role</th>
+                        <th className="px-5 py-4 text-right">Actions</th>
                      </tr>
-                  ))}
-               </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                     {loading ? (
+                        <tr><td colSpan={4} className="text-center py-10">Fetching secure records...</td></tr>
+                     ) : paginatedUsers.length === 0 ? (
+                        <tr><td colSpan={4} className="text-center py-10 text-zinc-500 font-mono">
+                           {searchQuery ? `No results for "${searchQuery}"` : 'No users found.'}
+                        </td></tr>
+                     ) : paginatedUsers.map(user => (
+                        <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                           <td className="px-5 py-4 text-white font-medium">{user.name}</td>
+                           <td className="px-5 py-4 font-mono text-xs">{user.email}</td>
+                           <td className="px-5 py-4">
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-widest ${user.role === 'ADMIN' ? 'bg-primary/20 text-primary border border-primary/30' : user.role === 'MONITORING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}`}>
+                                 {user.role}
+                              </span>
+                           </td>
+                           <td className="px-5 py-4 text-right flex justify-end space-x-2">
+                              <button onClick={() => handleEdit(user)} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-white transition-colors"><Pencil size={14} /></button>
+                              <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+
+            {/* Pagination */}
+            {!loading && filteredUsers.length > 0 && (
+               <div className="px-5 pb-4">
+                  <Pagination
+                     currentPage={currentPage}
+                     totalPages={totalPages}
+                     onPageChange={setCurrentPage}
+                     totalItems={filteredUsers.length}
+                     itemsPerPage={ITEMS_PER_PAGE}
+                  />
+               </div>
+            )}
          </div>
       </div>
    );

@@ -129,8 +129,18 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* Register link */}
+        <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          <p className="text-sm text-zinc-500 font-sans">
+            Belum punya akun?{' '}
+            <Link href="/register" className="text-primary hover:text-primary/80 font-semibold transition-colors">
+              Daftar di sini
+            </Link>
+          </p>
+        </div>
+
         {/* Footer info line inside card */}
-        <div className="mt-12 pt-6 border-t border-white/5 text-center flex flex-col space-y-1">
+        <div className="mt-6 text-center flex flex-col space-y-1">
           <span className="text-[10px] text-zinc-600 tracking-widest uppercase">Secure Connection Established</span>
           <span className="text-[10px] text-zinc-700 tracking-widest">v2.1.4 • Node: PRIME-AUTH-01</span>
         </div>

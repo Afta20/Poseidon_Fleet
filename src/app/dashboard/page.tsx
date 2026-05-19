@@ -1,11 +1,20 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { FleetList } from '@/components/dashboard/FleetList';
 import { VesselMap } from '@/components/dashboard/VesselMapWrapper';
 import { FuelChart } from '@/components/dashboard/FuelChart';
 import { MaintenanceModule, CrewLogsModule } from '@/components/dashboard/AnalyticsModules';
 import { useVesselStream } from '@/hooks/useVesselStream';
+import { CardSkeleton } from '@/components/ui/CardSkeleton';
+
+function MapSkeleton() {
+  return (
+    <div className="w-full h-[400px] bg-[#121217] rounded-xl border border-primary/20 animate-pulse flex items-center justify-center">
+      <div className="text-zinc-600 font-mono text-sm">Loading map data...</div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { vessels, loading, refetch } = useVesselStream();
@@ -46,7 +55,9 @@ export default function DashboardPage() {
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2 glow-border"></span>
               Live Fleet Map <span className="ml-2 text-sm font-mono text-zinc-500 uppercase">[{mapMode}]</span>
             </h2>
-            <VesselMap vessels={displayedVessels} selectedVesselId={selectedVesselId} mapMode={mapMode} />
+            <Suspense fallback={<MapSkeleton />}>
+              <VesselMap vessels={displayedVessels} selectedVesselId={selectedVesselId} mapMode={mapMode} />
+            </Suspense>
           </div>
           <div className="space-y-6">
             <h2 className="text-xl font-bold mb-4 shadow-neon-text uppercase">{analyticsMode}</h2>
@@ -70,7 +81,9 @@ export default function DashboardPage() {
         {/* Bottom Section: Fleet Overview */}
         <div className="mt-8">
           <h2 className="text-xl font-bold px-6 shadow-neon-text">Active Vessels Overview</h2>
-          <FleetList vessels={displayedVessels} loading={loading} onSelectVessel={setSelectedVesselId} selectedVesselId={selectedVesselId} onRefetch={refetch} />
+          <Suspense fallback={<CardSkeleton count={4} columns={2} />}>
+            <FleetList vessels={displayedVessels} loading={loading} onSelectVessel={setSelectedVesselId} selectedVesselId={selectedVesselId} onRefetch={refetch} />
+          </Suspense>
         </div>
       </div>
     </main>

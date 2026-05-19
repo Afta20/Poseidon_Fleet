@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { db } from '@/lib/db';
-import { Package, Ship, CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Package, Ship, AlertTriangle, ArrowLeft, MapPin, Weight, Navigation } from 'lucide-react';
 import Link from 'next/link';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { TrackingProgress } from '@/components/tracking/TrackingProgress';
+import { TrackingMapWrapper } from '@/components/tracking/TrackingMapWrapper';
 
 const statusMap: Record<string, { label: string, step: number }> = {
   PENDING: { label: 'Menunggu Konfirmasi', step: 1 },
@@ -18,12 +19,22 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
   const shipment = await db.shipment.findUnique({
     where: { id },
     include: {
-      vessel: true,
+      vessel: {
+        include: {
+          logs: {
+            orderBy: { timestamp: 'desc' },
+            take: 1,
+          }
+        }
+      },
       events: {
         orderBy: { timestamp: 'desc' }
       }
     }
   });
+
+  // Get vessel latest coordinates
+  const vesselLog = shipment?.vessel?.logs?.[0] || null;
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
@@ -42,6 +53,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Header Card */}
             <div className="border border-white/10 rounded-2xl bg-[#121217] p-8 glow-border">
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -58,15 +70,21 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-white/10 mb-6">
                 <div>
-                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold">Asal</p>
+                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
+                    <MapPin size={10} className="mr-1" /> Asal
+                  </p>
                   <p className="font-semibold">{shipment.origin}</p>
                 </div>
                 <div>
-                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold">Tujuan</p>
+                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
+                    <Navigation size={10} className="mr-1" /> Tujuan
+                  </p>
                   <p className="font-semibold">{shipment.destination}</p>
                 </div>
                 <div>
-                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold">Berat / Vol</p>
+                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
+                    <Weight size={10} className="mr-1" /> Berat / Vol
+                  </p>
                   <p className="font-semibold">{shipment.weight} Kg / {shipment.volume || '-'} m³</p>
                 </div>
                 <div>
@@ -75,12 +93,44 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
                     <Ship size={14} className="mr-2 text-primary" />
                     {shipment.vessel?.name || 'Menunggu Assign'}
                   </p>
+                  {shipment.vessel && (
+                    <p className="text-xs text-zinc-500 font-mono mt-0.5">{shipment.vessel.type}</p>
+                  )}
                 </div>
               </div>
 
               {/* Animated Progress Bar */}
               <TrackingProgress status={shipment.status} />
             </div>
+
+            {/* Live Map Section */}
+            {shipment.status !== 'REJECTED' && (
+              <div className="border border-white/10 rounded-2xl bg-[#121217] p-8">
+                <h2 className="text-lg font-bold mb-4 tracking-wide flex items-center">
+                  <MapPin size={18} className="mr-2 text-primary" />
+                  Peta Pelacakan Live
+                  {shipment.status === 'IN_TRANSIT' && (
+                    <span className="ml-3 inline-flex items-center text-[10px] font-mono text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5 animate-pulse" />
+                      LIVE
+                    </span>
+                  )}
+                </h2>
+                <p className="text-zinc-500 text-xs font-mono mb-4">
+                  Menampilkan rute pengiriman dari <span className="text-green-400">{shipment.origin}</span> ke <span className="text-red-400">{shipment.destination}</span>
+                  {shipment.vessel && <> • Kapal: <span className="text-primary">{shipment.vessel.name}</span></>}
+                </p>
+                <TrackingMapWrapper
+                  origin={shipment.origin}
+                  destination={shipment.destination}
+                  vesselName={shipment.vessel?.name || null}
+                  vesselType={shipment.vessel?.type || null}
+                  vesselLat={vesselLog?.lat || null}
+                  vesselLng={vesselLog?.lng || null}
+                  status={shipment.status}
+                />
+              </div>
+            )}
 
             {/* Tracking History */}
             <div className="border border-white/10 rounded-2xl bg-[#121217] p-8">

@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSession } from '@/hooks/useSession';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { ShieldAlert, Users, Anchor, BrainCircuit } from 'lucide-react';
@@ -8,6 +8,7 @@ import { UserCrud } from '@/components/admin/UserCrud';
 import { CrewCrud } from '@/components/admin/CrewCrud';
 import { BookingCrud } from '@/components/admin/BookingCrud';
 import { Package } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 export default function AdminDashboard() {
   const { session, loading } = useSession();
@@ -106,7 +107,9 @@ export default function AdminDashboard() {
              <div>
                <h2 className="text-xl font-bold mb-4 text-white">System Users</h2>
                <p className="text-zinc-400 mb-6 text-sm">Create, edit, or remove operator accounts.</p>
-               <UserCrud />
+               <Suspense fallback={<TableSkeleton rows={5} columns={4} />}>
+                 <UserCrud />
+               </Suspense>
              </div>
            )}
 
@@ -114,7 +117,9 @@ export default function AdminDashboard() {
              <div>
                <h2 className="text-xl font-bold mb-4 text-white">Crew Roster</h2>
                <p className="text-zinc-400 mb-6 text-sm">Assign captains and engineers to specific vessels.</p>
-               <CrewCrud />
+               <Suspense fallback={<TableSkeleton rows={5} columns={4} />}>
+                 <CrewCrud />
+               </Suspense>
              </div>
            )}
 
@@ -149,7 +154,9 @@ export default function AdminDashboard() {
 
            {activeTab === 'bookings' && (
              <div>
-               <BookingCrud />
+               <Suspense fallback={<TableSkeleton rows={5} columns={5} />}>
+                 <BookingCrud />
+               </Suspense>
              </div>
            )}
         </motion.div>
