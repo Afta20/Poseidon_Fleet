@@ -1,9 +1,10 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Menu as MenuIcon, X, ChevronDown } from 'lucide-react';
+import { ChevronDown, Menu as MenuIcon, X, User, LogOut, Lock, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSession } from '@/hooks/useSession';
 
 const NAV_LINKS = [
   { label: 'Beranda', href: '#hero' },
@@ -16,11 +17,25 @@ const NAV_LINKS = [
 export const LandingNavbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const { session, loading: sessionLoading } = useSession();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -32,6 +47,25 @@ export const LandingNavbar: React.FC = () => {
       }
     }
     setMobileOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  };
+
+  // Determine dashboard link based on role
+  const getDashboardLink = () => {
+    if (!session) return '/login';
+    if (session.role === 'ADMIN') return '/admin';
+    if (session.role === 'MONITORING') return '/dashboard';
+    return '/customer';
+  };
+
+  // Get initials for avatar
+  const getInitials = (name?: string) => {
+    if (!name) return '?';
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (
@@ -84,12 +118,88 @@ export const LandingNavbar: React.FC = () => {
               </div>
             </div>
 
-            <Link
-              href="/login"
-              className="px-5 py-2.5 text-sm font-semibold text-white bg-primary/90 hover:bg-primary rounded-lg transition-all duration-200 glow-border hover:shadow-[0_0_20px_rgba(168,85,247,0.5)]"
-            >
-              Login
-            </Link>
+            {/* Auth Section */}
+            {sessionLoading ? (
+              <div className="w-20 h-9 bg-zinc-800/50 rounded-lg animate-pulse" />
+            ) : session ? (
+              /* User Profile Dropdown */
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  onMouseEnter={() => setUserDropdownOpen(true)}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg border border-white/10 hover:border-primary/50 transition-all duration-200 group"
+                >
+                  {/* Avatar */}
+                  <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center text-primary text-xs font-bold font-mono">
+                    {getInitials(session.name)}
+                  </div>
+                  <div className="text-left hidden lg:block">
+                    <p className="text-sm font-semibold text-white leading-tight truncate max-w-[120px]">{session.name}</p>
+                    <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{session.role}</p>
+                  </div>
+                  <ChevronDown size={14} className={`text-zinc-500 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown */}
+                <AnimatePresence>
+                  {userDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      onMouseLeave={() => setUserDropdownOpen(false)}
+                      className="absolute top-[calc(100%+8px)] right-0 w-56 bg-[#121217] border border-primary/40 rounded-xl glow-border shadow-[0_4px_30px_rgba(0,0,0,0.5)] overflow-hidden"
+                    >
+                      {/* User Info Header */}
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <p className="text-sm font-bold text-white truncate">{session.name}</p>
+                        <p className="text-[11px] text-zinc-500 font-mono mt-0.5">{session.role}</p>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-1">
+                        <Link
+                          href={getDashboardLink()}
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center px-4 py-3 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                          <LayoutDashboard size={14} className="mr-3 text-zinc-500" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/change-password"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center px-4 py-3 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                          <Lock size={14} className="mr-3 text-zinc-500" />
+                          Ubah Password
+                        </Link>
+                      </div>
+
+                      {/* Logout */}
+                      <div className="border-t border-white/10 py-1">
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                        >
+                          <LogOut size={14} className="mr-3" />
+                          Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              /* Login Button (not logged in) */
+              <Link
+                href="/login"
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-primary/90 hover:bg-primary rounded-lg transition-all duration-200 glow-border hover:shadow-[0_0_20px_rgba(168,85,247,0.5)]"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
@@ -123,12 +233,54 @@ export const LandingNavbar: React.FC = () => {
                   {link.label}
                 </a>
               ))}
-              <Link
-                href="/login"
-                className="block px-4 py-3 text-sm font-semibold text-white bg-primary/90 hover:bg-primary rounded-lg text-center mt-2 glow-border"
-              >
-                Login
-              </Link>
+
+              {/* Mobile Auth */}
+              {sessionLoading ? (
+                <div className="h-11 bg-zinc-800/50 rounded-lg animate-pulse mt-2" />
+              ) : session ? (
+                <>
+                  {/* User info */}
+                  <div className="flex items-center space-x-3 px-4 py-3 mt-2 border-t border-white/10">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center text-primary text-xs font-bold font-mono">
+                      {getInitials(session.name)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{session.name}</p>
+                      <p className="text-[10px] text-zinc-500 font-mono uppercase">{session.role}</p>
+                    </div>
+                  </div>
+                  <Link
+                    href={getDashboardLink()}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center px-4 py-3 text-sm text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg"
+                  >
+                    <LayoutDashboard size={14} className="mr-3 text-zinc-500" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/change-password"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center px-4 py-3 text-sm text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg"
+                  >
+                    <Lock size={14} className="mr-3 text-zinc-500" />
+                    Ubah Password
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
+                  >
+                    <LogOut size={14} className="mr-3" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="block px-4 py-3 text-sm font-semibold text-white bg-primary/90 hover:bg-primary rounded-lg text-center mt-2 glow-border"
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

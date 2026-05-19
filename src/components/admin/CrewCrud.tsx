@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -120,6 +121,11 @@ export const CrewCrud = () => {
             <div className="p-4 border-b border-white/5">
                <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search by name, position, or vessel..." />
             </div>
+            {loading ? (
+               <div className="p-4">
+                  <TableSkeleton rows={5} columns={4} />
+               </div>
+            ) : (
             <div className="overflow-x-auto">
                <table className="w-full text-left text-sm text-zinc-400">
                   <thead className="bg-black/40 text-zinc-300 uppercase font-mono text-xs">
@@ -131,9 +137,7 @@ export const CrewCrud = () => {
                      </tr>
                   </thead>
                   <tbody>
-                     {loading ? (
-                        <tr><td colSpan={4} className="text-center py-10">Fetching secure roster...</td></tr>
-                     ) : paginatedCrews.length === 0 ? (
+                     {paginatedCrews.length === 0 ? (
                         <tr><td colSpan={4} className="text-center py-10 text-zinc-500 font-mono">
                            {searchQuery ? `No results for "${searchQuery}"` : 'No crew members found.'}
                         </td></tr>
@@ -153,10 +157,12 @@ export const CrewCrud = () => {
                               <button onClick={() => handleDelete(crew.id)} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
                            </td>
                         </tr>
-                     );})}
+                     );
+                     })}
                   </tbody>
                </table>
             </div>
+            )}
             {!loading && filteredCrews.length > 0 && (
                <div className="px-5 pb-4">
                   <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredCrews.length} itemsPerPage={ITEMS_PER_PAGE} />

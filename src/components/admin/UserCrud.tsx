@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -119,7 +120,7 @@ export const UserCrud = () => {
             </form>
          </div>
 
-         {/* Tabel */}
+          {/* Tabel */}
          <div className="lg:col-span-2 bg-[#1a1a21] border border-white/5 rounded-xl">
             {/* Search Bar */}
             <div className="p-4 border-b border-white/5">
@@ -130,6 +131,11 @@ export const UserCrud = () => {
                />
             </div>
 
+            {loading ? (
+               <div className="p-4">
+                  <TableSkeleton rows={5} columns={4} />
+               </div>
+            ) : (
             <div className="overflow-x-auto">
                <table className="w-full text-left text-sm text-zinc-400">
                   <thead className="bg-black/40 text-zinc-300 uppercase font-mono text-xs">
@@ -141,9 +147,7 @@ export const UserCrud = () => {
                      </tr>
                   </thead>
                   <tbody>
-                     {loading ? (
-                        <tr><td colSpan={4} className="text-center py-10">Fetching secure records...</td></tr>
-                     ) : paginatedUsers.length === 0 ? (
+                     {paginatedUsers.length === 0 ? (
                         <tr><td colSpan={4} className="text-center py-10 text-zinc-500 font-mono">
                            {searchQuery ? `No results for "${searchQuery}"` : 'No users found.'}
                         </td></tr>
@@ -165,6 +169,7 @@ export const UserCrud = () => {
                   </tbody>
                </table>
             </div>
+            )}
 
             {/* Pagination */}
             {!loading && filteredUsers.length > 0 && (

@@ -59,9 +59,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // === Change Password: any authenticated user ===
+  if (pathname.startsWith('/change-password')) {
+    if (!session) return NextResponse.redirect(new URL('/login', request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/:path*', '/customer/:path*', '/dashboard/:path*', '/fleet/:path*', '/map/:path*', '/analytics/:path*'],
+  matcher: ['/admin/:path*', '/api/:path*', '/customer/:path*', '/dashboard/:path*', '/fleet/:path*', '/map/:path*', '/analytics/:path*', '/change-password'],
 };

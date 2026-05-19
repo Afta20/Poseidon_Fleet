@@ -124,29 +124,137 @@ export default function AdminDashboard() {
            )}
 
            {activeTab === 'reports' && (
-             <div>
-               <div className="flex justify-between items-center mb-6">
-                 <div>
-                   <h2 className="text-xl font-bold text-white">AI Studio Analytics</h2>
-                   <p className="text-zinc-400 text-sm">Generate automated insights on fuel and route performance.</p>
+             <div className="space-y-6">
+               {/* Header Section */}
+               <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-[#1a1a24] to-blue-500/10 border border-primary/30 p-6">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                 <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                   <div>
+                     <h2 className="text-2xl font-bold text-white flex items-center">
+                       <BrainCircuit size={24} className="mr-3 text-primary" />
+                       AI Studio Analytics
+                     </h2>
+                     <p className="text-zinc-400 text-sm mt-2 max-w-lg">
+                       Powered by Gemini AI — Analisis otomatis performa armada, efisiensi bahan bakar, dan optimasi rute pelayaran.
+                     </p>
+                   </div>
+                   <button 
+                     onClick={generateReport}
+                     disabled={reportLoading}
+                     className="group relative px-8 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold uppercase tracking-widest text-sm transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+                   >
+                     <span className="flex items-center">
+                       {reportLoading ? (
+                         <>
+                           <motion.div
+                             animate={{ rotate: 360 }}
+                             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                             className="mr-2"
+                           >
+                             <BrainCircuit size={16} />
+                           </motion.div>
+                           Analyzing...
+                         </>
+                       ) : (
+                         <>
+                           <BrainCircuit size={16} className="mr-2" />
+                           Generate Report
+                         </>
+                       )}
+                     </span>
+                   </button>
                  </div>
-                 <button 
-                   onClick={generateReport}
-                   disabled={reportLoading}
-                   className="bg-primary/20 hover:bg-primary/40 border border-primary text-primary px-6 py-2 rounded-lg font-mono font-bold uppercase transition flex items-center disabled:opacity-50"
-                 >
-                   {reportLoading ? 'Analyzing...' : 'Generate Report'}
-                 </button>
                </div>
                
-               {aiReport ? (
-                 <div className="bg-black/40 p-6 rounded-lg font-mono text-sm leading-relaxed border border-primary/20 whitespace-pre-wrap text-emerald-400">
-                   {aiReport}
+               {/* Report Content */}
+               {reportLoading ? (
+                 <div className="bg-[#0d0d12] rounded-xl border border-primary/20 p-8">
+                   <div className="flex items-center mb-6">
+                     <motion.div
+                       animate={{ opacity: [0.3, 1, 0.3] }}
+                       transition={{ duration: 2, repeat: Infinity }}
+                       className="w-2 h-2 rounded-full bg-primary mr-3"
+                     />
+                     <span className="text-xs text-primary font-mono uppercase tracking-widest">AI Processing...</span>
+                   </div>
+                   <div className="space-y-4 animate-pulse">
+                     <div className="h-4 bg-zinc-800/60 rounded w-3/4" />
+                     <div className="h-4 bg-zinc-800/40 rounded w-full" />
+                     <div className="h-4 bg-zinc-800/50 rounded w-5/6" />
+                     <div className="h-4 bg-zinc-800/30 rounded w-2/3" />
+                     <div className="h-4 bg-zinc-800/40 rounded w-full" />
+                     <div className="h-4 bg-zinc-800/50 rounded w-4/5" />
+                   </div>
+                 </div>
+               ) : aiReport ? (
+                 <div className="bg-[#0d0d12] rounded-xl border border-primary/20 overflow-hidden">
+                   {/* Terminal Header */}
+                   <div className="flex items-center justify-between px-5 py-3 bg-black/60 border-b border-white/5">
+                     <div className="flex items-center space-x-2">
+                       <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                       <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                       <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                     </div>
+                     <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Gemini AI Report • Fleet Analytics</span>
+                     <span className="text-[10px] font-mono text-primary">✓ Complete</span>
+                   </div>
+
+                   {/* Report Body */}
+                   <div className="p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                     <div className="font-mono text-sm leading-7 text-zinc-300 whitespace-pre-wrap">
+                       {aiReport.split('\n').map((line, i) => {
+                         // Section headers (lines starting with ##, **, or all caps)
+                         if (line.match(/^#{1,3}\s/) || line.match(/^\*\*.+\*\*$/)) {
+                           const cleanLine = line.replace(/^#{1,3}\s/, '').replace(/\*\*/g, '');
+                           return (
+                             <div key={i} className="text-primary font-bold text-base mt-4 mb-2 flex items-center border-b border-primary/20 pb-2">
+                               <span className="w-1 h-4 bg-primary rounded-full mr-3 shrink-0" />
+                               {cleanLine}
+                             </div>
+                           );
+                         }
+                         // Bullet points
+                         if (line.match(/^\s*[-•]\s/)) {
+                           return (
+                             <div key={i} className="flex items-start pl-4 py-0.5">
+                               <span className="text-primary mr-2 mt-1 shrink-0">›</span>
+                               <span className="text-zinc-300">{line.replace(/^\s*[-•]\s/, '')}</span>
+                             </div>
+                           );
+                         }
+                         // Numbered points
+                         if (line.match(/^\s*\d+\.\s/)) {
+                           return (
+                             <div key={i} className="flex items-start pl-4 py-0.5">
+                               <span className="text-emerald-400 mr-2 shrink-0 font-bold">{line.match(/^\s*(\d+)\./)?.[1]}.</span>
+                               <span className="text-zinc-300">{line.replace(/^\s*\d+\.\s/, '')}</span>
+                             </div>
+                           );
+                         }
+                         // Empty lines
+                         if (line.trim() === '') return <div key={i} className="h-3" />;
+                         // Normal text
+                         return <div key={i} className="text-zinc-400">{line}</div>;
+                       })}
+                     </div>
+                   </div>
                  </div>
                ) : (
-                 <div className="bg-black/50 p-4 rounded-lg font-mono text-zinc-500 flex flex-col justify-center items-center py-20 border border-white/5">
-                   <BrainCircuit size={48} className="mb-4 opacity-50" />
-                   Awaiting analysis trigger.
+                 /* Empty State */
+                 <div className="relative bg-[#0d0d12] rounded-xl border border-white/5 py-20 flex flex-col items-center justify-center overflow-hidden">
+                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.03)_0%,transparent_70%)]" />
+                   <motion.div
+                     animate={{ rotate: 360 }}
+                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                     className="relative mb-6"
+                   >
+                     <div className="w-20 h-20 rounded-full border-2 border-dashed border-zinc-800" />
+                     <BrainCircuit size={28} className="absolute inset-0 m-auto text-zinc-700" />
+                   </motion.div>
+                   <h3 className="text-lg font-bold text-zinc-500 mb-2">Belum Ada Laporan</h3>
+                   <p className="text-zinc-600 text-sm max-w-md text-center font-sans">
+                     Klik tombol <span className="text-primary font-semibold">"Generate Report"</span> di atas untuk memulai analisis kinerja armada secara otomatis menggunakan AI.
+                   </p>
                  </div>
                )}
              </div>
