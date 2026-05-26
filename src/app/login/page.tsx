@@ -8,6 +8,7 @@ import Link from 'next/link';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -108,9 +109,17 @@ export default function LoginPage() {
 
           {/* Options */}
           <div className="flex items-center justify-between mt-2 font-sans">
-            <label className="flex items-center space-x-2 cursor-pointer group">
+            <label className="flex items-center space-x-2 cursor-pointer group select-none">
+              <input 
+                type="checkbox" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="sr-only"
+              />
               <div className="w-4 h-4 rounded border border-white/10 bg-[#1a1a21] group-hover:border-primary/50 flex items-center justify-center transition-colors">
-                 {/* Visual only checkbox for match */}
+                 {rememberMe && (
+                   <span className="w-2 h-2 rounded bg-primary" />
+                 )}
               </div>
               <span className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors">Remember me</span>
             </label>

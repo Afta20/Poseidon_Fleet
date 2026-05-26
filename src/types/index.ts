@@ -7,6 +7,7 @@ export interface VesselWithLatestLog extends Omit<Vessel, 'status'> {
   latestLog: Omit<Log, 'timestamp'> & { timestamp: string | Date }; // Adjusted for serialization
   route?: Route | null;
   lastUpdated: number; // to track when the frontend last received an update for blinking effect
+  progress?: number; // active route progress from 0.0 to 1.0
 }
 
 // Coordinate representing a location

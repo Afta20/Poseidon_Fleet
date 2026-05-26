@@ -4,10 +4,15 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Globe, Ship } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession } from '@/hooks/useSession';
 
 export const HeroSection: React.FC = () => {
   const [trackingId, setTrackingId] = React.useState('');
   const router = useRouter();
+  const { session, loading: sessionLoading } = useSession();
+
+  // Kalau sudah login → booking, kalau belum → login
+  const bookingHref = (!sessionLoading && session) ? '/customer/booking' : '/login';
 
   return (
     <section
@@ -80,7 +85,7 @@ export const HeroSection: React.FC = () => {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
         >
           <Link
-            href="/login"
+            href={bookingHref}
             className="group inline-flex items-center px-10 py-4 text-base font-bold text-white bg-primary rounded-xl transition-all duration-300 hover:shadow-[0_0_40px_rgba(168,85,247,0.6)] hover:scale-[1.05]"
           >
             Mulai Pengiriman

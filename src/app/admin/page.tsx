@@ -2,12 +2,12 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSession } from '@/hooks/useSession';
 import { Megamenu } from '@/components/layout/Megamenu';
-import { ShieldAlert, Users, Anchor, BrainCircuit } from 'lucide-react';
+import { ShieldAlert, Users, Anchor, BrainCircuit, Ship, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { UserCrud } from '@/components/admin/UserCrud';
 import { CrewCrud } from '@/components/admin/CrewCrud';
 import { BookingCrud } from '@/components/admin/BookingCrud';
-import { Package } from 'lucide-react';
+import { VesselCrud } from '@/components/admin/VesselCrud';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 export default function AdminDashboard() {
@@ -18,7 +18,7 @@ export default function AdminDashboard() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
-      if (tab && ['users', 'crew', 'reports', 'bookings'].includes(tab)) {
+      if (tab && ['users', 'crew', 'reports', 'bookings', 'vessels'].includes(tab)) {
          setActiveTab(tab);
       }
     }
@@ -88,6 +88,12 @@ export default function AdminDashboard() {
             className={`pb-4 px-2 font-mono uppercase tracking-wider transition-colors ${activeTab === 'reports' ? 'border-b-2 border-primary text-primary' : 'text-zinc-500 hover:text-white'}`}
           >
             <BrainCircuit size={16} className="inline mr-2" /> AI Reports
+          </button>
+          <button 
+            onClick={() => setActiveTab('vessels')} 
+            className={`pb-4 px-2 font-mono uppercase tracking-wider transition-colors ${activeTab === 'vessels' ? 'border-b-2 border-primary text-primary' : 'text-zinc-500 hover:text-white'}`}
+          >
+            <Ship size={16} className="inline mr-2" /> Armada
           </button>
           <button 
             onClick={() => setActiveTab('bookings')} 
@@ -257,6 +263,14 @@ export default function AdminDashboard() {
                    </p>
                  </div>
                )}
+             </div>
+           )}
+
+           {activeTab === 'vessels' && (
+             <div>
+               <Suspense fallback={<TableSkeleton rows={5} columns={6} />}>
+                 <VesselCrud />
+               </Suspense>
              </div>
            )}
 

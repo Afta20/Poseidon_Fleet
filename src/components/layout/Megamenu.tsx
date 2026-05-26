@@ -116,31 +116,52 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
           </div>
 
           <div className="hidden md:flex items-center h-full space-x-1">
-            {dynamicMenuItems.map((item) => (
-              <div 
-                key={item.key} 
-                className="h-full relative flex items-center px-4 cursor-pointer"
-                onMouseEnter={() => setActiveMenu(item.key)}
-                onMouseLeave={() => setActiveMenu(null)}
-              >
-                <Link href={`/${item.key}`} className={`flex items-center transition-colors duration-200 ${activeMenu === item.key ? 'text-primary' : 'text-gray-300 hover:text-white'}`}>
-                  {item.icon}
-                  <span className="font-semibold">{item.label}</span>
-                  {item.submenus.length > 0 && (
-                    <ChevronDown size={14} className={`ml-1 transition-transform ${activeMenu === item.key ? 'rotate-180' : ''}`} />
-                  )}
-                </Link>
+            {dynamicMenuItems.map((item) => {
+              // Active: exact match only — prevents parent path from lighting up on sub-pages
+              const itemPath = `/${item.key}`;
+              const isActive = item.key === ''
+                ? pathname === '/'
+                : pathname === itemPath;
 
-                {/* Animated Bottom Border Glow */}
-                {activeMenu === item.key && (
-                  <motion.div
-                    layoutId="megamenu-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1, boxShadow: '0 0 8px #a855f7' }}
-                    exit={{ opacity: 0 }}
-                  />
-                )}
+              return (
+                <div
+                  key={item.key}
+                  className="h-full relative flex items-center px-4 cursor-pointer"
+                  onMouseEnter={() => setActiveMenu(item.key)}
+                  onMouseLeave={() => setActiveMenu(null)}
+                >
+                  <Link
+                    href={`/${item.key}`}
+                    className={`flex items-center transition-colors duration-200 ${
+                      isActive
+                        ? 'text-primary font-bold'
+                        : activeMenu === item.key
+                          ? 'text-primary'
+                          : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="font-semibold">{item.label}</span>
+                    {item.submenus.length > 0 && (
+                      <ChevronDown size={14} className={`ml-1 transition-transform ${activeMenu === item.key ? 'rotate-180' : ''}`} />
+                    )}
+                  </Link>
+
+                  {/* Active page — permanent glow underline */}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" style={{ boxShadow: '0 0 10px #a855f7, 0 0 4px #a855f7' }} />
+                  )}
+
+                  {/* Hover indicator — only when page not already active */}
+                  {!isActive && activeMenu === item.key && (
+                    <motion.div
+                      layoutId="megamenu-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/30"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    />
+                  )}
 
                 {/* Megamenu Dropdown - Only show if submenus exist */}
                 <AnimatePresence>
@@ -181,7 +202,9 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
                   )}
                 </AnimatePresence>
               </div>
-            ))}
+              );
+            })}
+
             
             {session && (
               <button 

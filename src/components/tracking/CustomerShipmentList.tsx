@@ -94,6 +94,14 @@ export const CustomerShipmentList: React.FC<CustomerShipmentListProps> = ({ ship
                       <Ship size={14} className="mr-2 text-zinc-500" />
                       <span className="truncate">{shipment.vessel?.name || 'Menunggu Armada'}</span>
                     </div>
+                    <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
+                      <span className="text-zinc-500">Status Bayar:</span>
+                      <span className={`font-mono px-2 py-0.5 rounded text-[10px] font-bold ${
+                        shipment.paymentStatus === 'PAID' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {shipment.paymentStatus === 'PAID' ? '✓ LUNAS' : '✗ BELUM BAYAR'}
+                      </span>
+                    </div>
                   </div>
                   <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-xs font-mono">
                     <span className="text-zinc-500">RESI: {shipment.id.split('-')[0]}</span>
@@ -123,6 +131,7 @@ export const CustomerShipmentList: React.FC<CustomerShipmentListProps> = ({ ship
                   <th className="px-6 py-4">Paket / Resi</th>
                   <th className="px-6 py-4">Rute</th>
                   <th className="px-6 py-4">Tipe</th>
+                  <th className="px-6 py-4">Pembayaran</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
               </thead>
@@ -135,6 +144,11 @@ export const CustomerShipmentList: React.FC<CustomerShipmentListProps> = ({ ship
                     </td>
                     <td className="px-6 py-4 text-zinc-300">{s.origin} → {s.destination}</td>
                     <td className="px-6 py-4 text-zinc-300">{s.type}</td>
+                    <td className="px-6 py-4">
+                      <span className={`text-xs px-2 py-1 rounded font-bold font-mono ${s.paymentStatus === 'PAID' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {s.paymentStatus === 'PAID' ? '✓ PAID' : '✗ UNPAID'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`text-xs px-2 py-1 rounded ${s.status === 'ARRIVED' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                         {s.status}

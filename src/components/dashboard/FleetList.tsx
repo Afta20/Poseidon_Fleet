@@ -162,38 +162,45 @@ export const FleetList: React.FC<{
 
               {/* Shipments / Active Cargo from Customers */}
               <div className="col-span-2 bg-white/5 rounded-lg p-3 border border-white/5">
-                <div className="flex items-center text-zinc-400 mb-2">
-                  <Package size={12} className="mr-1" />
-                  <span className="font-mono text-xs">MUATAN AKTIF</span>
-                  {(vessel as any).shipments?.length > 0 && (
-                    <span className="ml-2 text-[10px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded font-bold">
-                      {(vessel as any).shipments.length}
-                    </span>
-                  )}
-                </div>
-                {!(vessel as any).shipments || (vessel as any).shipments.length === 0 ? (
-                  <span className="font-mono text-xs text-zinc-500 italic">Belum ada muatan dari customer</span>
-                ) : (
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
-                    {(vessel as any).shipments.map((s: any) => (
-                      <div key={s.id} className="flex items-center justify-between bg-black/30 rounded px-2 py-1.5 border border-white/5">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-semibold truncate">{s.title}</p>
-                          <p className="text-zinc-500 text-[10px] font-mono truncate">
-                            {s.origin} → {s.destination} • {s.weight}Kg • {s.customer?.name || 'N/A'}
-                          </p>
-                        </div>
-                        <span className={`ml-2 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                          s.status === 'IN_TRANSIT' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                          s.status === 'ARRIVED' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                          'bg-primary/20 text-primary border border-primary/30'
-                        }`}>
-                          {s.status}
-                        </span>
+                {(() => {
+                  const activeShipments = (vessel as any).shipments?.filter((s: any) => s.status !== 'ARRIVED' && s.status !== 'REJECTED') || [];
+                  return (
+                    <>
+                      <div className="flex items-center text-zinc-400 mb-2">
+                        <Package size={12} className="mr-1" />
+                        <span className="font-mono text-xs">MUATAN AKTIF</span>
+                        {activeShipments.length > 0 && (
+                          <span className="ml-2 text-[10px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded font-bold">
+                            {activeShipments.length}
+                          </span>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
+                      {activeShipments.length === 0 ? (
+                        <span className="font-mono text-xs text-zinc-500 italic">Belum ada muatan dari customer</span>
+                      ) : (
+                        <div className="space-y-2 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
+                          {activeShipments.map((s: any) => (
+                            <div key={s.id} className="flex items-center justify-between bg-black/30 rounded px-2 py-1.5 border border-white/5">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-xs font-semibold truncate">{s.title}</p>
+                                <p className="text-zinc-500 text-[10px] font-mono truncate">
+                                  {s.origin} → {s.destination} • {s.weight}Kg • {s.customer?.name || 'N/A'}
+                                </p>
+                              </div>
+                              <span className={`ml-2 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                s.status === 'IN_TRANSIT' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                                s.status === 'ARRIVED' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                'bg-primary/20 text-primary border border-primary/30'
+                              }`}>
+                                {s.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </motion.div>

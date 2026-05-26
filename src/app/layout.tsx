@@ -28,7 +28,7 @@ export default function RootLayout({
       className={`dark ${inter.variable} ${robotoMono.variable} h-full antialiased font-sans`}
       style={{ colorScheme: "dark" }}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground text-lg shadow-neon-text">
+      <body className="min-h-full flex flex-col bg-background text-foreground text-lg shadow-neon-text" suppressHydrationWarning>
         {children}
       </body>
     </html>

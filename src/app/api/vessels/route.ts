@@ -1,118 +1,11 @@
-import { NextResponse } from 'next/server'
-
-// Mock vessel data as fallback when database is not available
-const MOCK_VESSELS = [
-  {
-    id: 'v1',
-    name: 'Poseidon Alpha',
-    type: 'Tanker',
-    status: 'En Route',
-    routeId: 'r1',
-    route: { id: 'r1', name: 'Trans-Pacific Route' },
-    latestLog: {
-      id: 'log-1',
-      vesselId: 'v1',
-      fuelLevel: 85,
-      speed: 14.5,
-      lat: 1.290270,
-      lng: 103.851959,
-      timestamp: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'v2',
-    name: 'Titan Freight',
-    type: 'Cargo',
-    status: 'Delayed',
-    routeId: 'r2',
-    route: { id: 'r2', name: 'Trans-Atlantic Route' },
-    latestLog: {
-      id: 'log-2',
-      vesselId: 'v2',
-      fuelLevel: 45,
-      speed: 10.2,
-      lat: 51.9225,
-      lng: 4.47917,
-      timestamp: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'v3',
-    name: 'Ocean Voyager',
-    type: 'Passenger',
-    status: 'Maintenance',
-    routeId: 'r1',
-    route: { id: 'r1', name: 'Trans-Pacific Route' },
-    latestLog: {
-      id: 'log-3',
-      vesselId: 'v3',
-      fuelLevel: 20,
-      speed: 0,
-      lat: 34.0522,
-      lng: -118.2437,
-      timestamp: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'v4',
-    name: 'Neptune Horizon',
-    type: 'Tanker',
-    status: 'En Route',
-    routeId: 'r1',
-    route: { id: 'r1', name: 'Trans-Pacific Route' },
-    latestLog: {
-      id: 'log-4',
-      vesselId: 'v4',
-      fuelLevel: 60,
-      speed: 18.0,
-      lat: 22.3193,
-      lng: 114.1694,
-      timestamp: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'v5',
-    name: 'Trident Express',
-    type: 'Cargo',
-    status: 'In Port',
-    routeId: 'r2',
-    route: { id: 'r2', name: 'Trans-Atlantic Route' },
-    latestLog: {
-      id: 'log-5',
-      vesselId: 'v5',
-      fuelLevel: 92,
-      speed: 0,
-      lat: -6.1175,
-      lng: 106.8286,
-      timestamp: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'v6',
-    name: 'Aegean Star',
-    type: 'Passenger',
-    status: 'En Route',
-    routeId: 'r1',
-    route: { id: 'r1', name: 'Trans-Pacific Route' },
-    latestLog: {
-      id: 'log-6',
-      vesselId: 'v6',
-      fuelLevel: 72,
-      speed: 12.8,
-      lat: 35.6762,
-      lng: 139.6503,
-      timestamp: new Date().toISOString(),
-    },
-  },
-];
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
 
 export async function GET() {
   try {
-    // Try database first
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-
-    const vessels = await prisma.vessel.findMany({
+    const vessels = await db.vessel.findMany({
       include: {
         route: true,
         logs: {
@@ -128,13 +21,6 @@ export async function GET() {
         }
       }
     });
-
-    await prisma.$disconnect();
-
-    if (vessels.length === 0) {
-      // Database is empty — return mock data
-      return NextResponse.json({ vessels: MOCK_VESSELS });
-    }
 
     const formattedVessels = vessels.map(v => {
       const { logs, ...vesselData } = v;
@@ -154,8 +40,42 @@ export async function GET() {
 
     return NextResponse.json({ vessels: formattedVessels });
   } catch (error) {
-    console.error('Database unavailable, using mock data:', error);
-    // Fallback to mock data when database is not available
-    return NextResponse.json({ vessels: MOCK_VESSELS });
+    console.error('Vessel GET error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('session')?.value;
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const session: any = await verifyToken(token);
+    if (!session || session.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const data = await req.json();
+
+    if (!data.name || !data.type || !data.status) {
+      return NextResponse.json({ error: 'Nama, Tipe, dan Status wajib diisi' }, { status: 400 });
+    }
+
+    const vessel = await db.vessel.create({
+      data: {
+        name: data.name,
+        type: data.type,
+        status: data.status,
+        plateCode: data.plateCode || null,
+        capacity: data.capacity ? Number(data.capacity) : null,
+        payload: data.payload || null,
+        routeId: data.routeId || null,
+      }
+    });
+
+    return NextResponse.json({ success: true, vessel });
+  } catch (error) {
+    console.error('Vessel POST error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

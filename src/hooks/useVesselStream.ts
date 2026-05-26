@@ -1,5 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { VesselWithLatestLog } from '@/types';
+import { useState, useEffect, useRef } from 'react';
+import { VesselWithLatestLog, VesselStatus } from '@/types';
+import { PORT_DATABASE } from '@/components/tracking/TrackingMap';
+
+function findPortCoords(name: string): [number, number] | null {
+  if (!name) return null;
+  const lower = name.toLowerCase().trim();
+  for (const port of PORT_DATABASE) {
+    if (port.alias.some(a => lower.includes(a))) {
+      return port.coords;
+    }
+  }
+  return null;
+}
 
 // Utility to play sonar ping using Web Audio API
 const playPing = () => {
@@ -42,10 +54,14 @@ export const useVesselStream = () => {
     try {
       const res = await fetch('/api/vessels');
       const data = await res.json();
-      const loaded: VesselWithLatestLog[] = data.vessels.map((v: any) => ({
-        ...v,
-        lastUpdated: Date.now()
-      }));
+      const loaded: VesselWithLatestLog[] = data.vessels.map((v: any) => {
+        const activeShipment = v.shipments?.find((s: any) => s.status === 'IN_TRANSIT');
+        return {
+          ...v,
+          progress: activeShipment ? 0.35 : 0.0, // Start 35% along the way for demo vibrancy
+          lastUpdated: Date.now()
+        };
+      });
       setVessels(loaded);
       setLoading(false);
     } catch (e) {
@@ -78,7 +94,6 @@ export const useVesselStream = () => {
              newStatus = 'Signal Lost';
              hasSignalLost = true;
           } else if (isCurrentlyLost && randomFactor < 0.20) {
-             // Recover back to En Route or original (simplification to En Route)
              newStatus = 'En Route'; 
           }
 
@@ -86,28 +101,69 @@ export const useVesselStream = () => {
             return {
               ...vessel,
               status: newStatus,
-              // don't update lastUpdated or lat/lng
             };
           }
 
-          // Simulate movement
-          const latShift = (Math.random() - 0.5) * 0.005;
-          const lngShift = (Math.random() - 0.5) * 0.005;
-          
-          // Speed variance
-          const speedVariance = (Math.random() - 0.5) * 2;
-          
-          return {
-            ...vessel,
-            status: newStatus,
-            lastUpdated: Date.now(),
-            latestLog: {
-               ...vessel.latestLog,
-               lat: vessel.latestLog.lat + latShift,
-               lng: vessel.latestLog.lng + lngShift,
-               speed: Math.max(0, vessel.latestLog.speed + speedVariance)
+          // Smart live route movement if carrying active kargo that is IN_TRANSIT
+          const activeShipment = (vessel as any).shipments?.find((s: any) => s.status === 'IN_TRANSIT');
+
+          if (activeShipment) {
+            const originCoords = findPortCoords(activeShipment.origin) || [1.290270, 103.851959]; // default Singapore
+            const destCoords = findPortCoords(activeShipment.destination) || [-6.10, 106.88]; // default Jakarta
+            
+            // Advance route progress by 1.5% every 5 seconds
+            let nextProgress = (vessel.progress || 0.35) + 0.015;
+            if (nextProgress > 1.0) {
+              nextProgress = 0.0; // Loop back for infinite loop demo
             }
-          };
+
+            const currentLat = originCoords[0] + (destCoords[0] - originCoords[0]) * nextProgress;
+            const currentLng = originCoords[1] + (destCoords[1] - originCoords[1]) * nextProgress;
+            const speedVariance = (Math.random() - 0.5) * 1.5;
+
+             return {
+              ...vessel,
+              status: 'En Route' as VesselStatus,
+              progress: nextProgress,
+              lastUpdated: Date.now(),
+              latestLog: {
+                 ...vessel.latestLog,
+                 lat: currentLat,
+                 lng: currentLng,
+                 speed: Math.max(12.0, 15.5 + speedVariance)
+              }
+            };
+          } else {
+            // Stationary drifting around the latest shipment's target port (or original coords)
+            const latestShipment = (vessel as any).shipments?.[0]; // shipments sorted by createdAt desc
+            let targetPortCoords: [number, number] | null = null;
+            
+            if (latestShipment) {
+              // If the cargo has arrived, the ship is parked at the destination port!
+              // Otherwise, it is parked at the origin port preparing to load or waiting
+              const portName = latestShipment.status === 'ARRIVED' ? latestShipment.destination : latestShipment.origin;
+              targetPortCoords = findPortCoords(portName);
+            }
+            
+            const baseLat = targetPortCoords ? targetPortCoords[0] : (vessel.latestLog?.lat && vessel.latestLog.lat !== 0 ? vessel.latestLog.lat : -6.08);
+            const baseLng = targetPortCoords ? targetPortCoords[1] : (vessel.latestLog?.lng && vessel.latestLog.lng !== 0 ? vessel.latestLog.lng : 106.89);
+            
+            const latShift = (Math.random() - 0.5) * 0.0004;
+            const lngShift = (Math.random() - 0.5) * 0.0004;
+
+            return {
+              ...vessel,
+              status: (newStatus === 'En Route' ? 'In Port' : newStatus) as VesselStatus, // Fallback if no active shipment
+              progress: 0,
+              lastUpdated: Date.now(),
+              latestLog: {
+                 ...vessel.latestLog,
+                 lat: baseLat + latShift,
+                 lng: baseLng + lngShift,
+                 speed: 0
+              }
+            };
+          }
         });
 
         if (hasSignalLost) {

@@ -4,42 +4,104 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Known port coordinates for demo routing
-const PORT_COORDS: Record<string, [number, number]> = {
-  'tanjung priok': [-6.1, 106.88],
-  'jakarta': [-6.1, 106.88],
-  'tanjung perak': [-7.2, 112.73],
-  'surabaya': [-7.2, 112.73],
-  'makassar': [-5.14, 119.43],
-  'belawan': [3.77, 98.69],
-  'medan': [3.77, 98.69],
-  'balikpapan': [-1.27, 116.83],
-  'banjarmasin': [-3.33, 114.59],
-  'pontianak': [-0.03, 109.32],
-  'semarang': [-6.97, 110.42],
-  'bitung': [1.44, 125.19],
-  'sorong': [-0.87, 131.25],
-  'jayapura': [-2.54, 140.72],
-  'ambon': [-3.69, 128.17],
-  'kupang': [-10.17, 123.61],
-  'singapore': [1.29, 103.85],
-  'hong kong': [22.32, 114.17],
-  'rotterdam': [51.92, 4.48],
-  'los angeles': [34.05, -118.24],
-  'tokyo': [35.68, 139.65],
-  'shanghai': [31.23, 121.47],
-  'busan': [35.18, 129.08],
-};
+// ─── Master Port Database ────────────────────────────────────────────
+export const PORT_DATABASE: { name: string; alias: string[]; coords: [number, number]; region: string }[] = [
+  // Jawa
+  { name: 'Tanjung Priok', alias: ['jakarta', 'tanjung priok', 'priok', 'jak'], coords: [-6.08, 106.89], region: 'DKI Jakarta' },
+  { name: 'Tanjung Perak', alias: ['surabaya', 'tanjung perak', 'perak', 'sby'], coords: [-7.17, 112.73], region: 'Jawa Timur' },
+  { name: 'Tanjung Emas', alias: ['semarang', 'tanjung emas', 'smg'], coords: [-6.93, 110.42], region: 'Jawa Tengah' },
+  { name: 'Tanjung Intan', alias: ['cilacap', 'tanjung intan'], coords: [-7.73, 109.00], region: 'Jawa Tengah' },
+  { name: 'Ciwandan', alias: ['cilegon', 'banten', 'ciwandan', 'merak'], coords: [-5.99, 106.00], region: 'Banten' },
+  { name: 'Gresik', alias: ['gresik'], coords: [-7.16, 112.65], region: 'Jawa Timur' },
+  { name: 'Probolinggo', alias: ['probolinggo'], coords: [-7.75, 113.22], region: 'Jawa Timur' },
+  // Sumatra
+  { name: 'Belawan', alias: ['medan', 'belawan'], coords: [3.81, 98.71], region: 'Sumatra Utara' },
+  { name: 'Dumai', alias: ['dumai'], coords: [1.67, 101.45], region: 'Riau' },
+  { name: 'Pekanbaru', alias: ['pekanbaru', 'pkb'], coords: [0.51, 101.44], region: 'Riau' },
+  { name: 'Teluk Bayur', alias: ['padang', 'teluk bayur', 'telukbayur'], coords: [-1.00, 100.37], region: 'Sumatra Barat' },
+  { name: 'Palembang', alias: ['palembang', 'plm'], coords: [-2.99, 104.76], region: 'Sumatra Selatan' },
+  { name: 'Panjang', alias: ['bandar lampung', 'lampung', 'panjang'], coords: [-5.47, 105.32], region: 'Lampung' },
+  { name: 'Batam', alias: ['batam'], coords: [1.16, 104.05], region: 'Kepulauan Riau' },
+  { name: 'Tanjung Balai Karimun', alias: ['karimun', 'tanjung balai karimun'], coords: [1.04, 103.45], region: 'Kepulauan Riau' },
+  { name: 'Sabang', alias: ['sabang', 'aceh', 'banda aceh'], coords: [5.89, 95.32], region: 'Aceh' },
+  { name: 'Lhokseumawe', alias: ['lhokseumawe'], coords: [5.18, 97.14], region: 'Aceh' },
+  // Kalimantan
+  { name: 'Balikpapan', alias: ['balikpapan', 'bpp'], coords: [-1.28, 116.80], region: 'Kalimantan Timur' },
+  { name: 'Samarinda', alias: ['samarinda', 'smd'], coords: [-0.50, 117.15], region: 'Kalimantan Timur' },
+  { name: 'Banjarmasin', alias: ['banjarmasin', 'bjm'], coords: [-3.33, 114.59], region: 'Kalimantan Selatan' },
+  { name: 'Pontianak', alias: ['pontianak', 'ptk'], coords: [-0.03, 109.32], region: 'Kalimantan Barat' },
+  { name: 'Tarakan', alias: ['tarakan'], coords: [3.32, 117.62], region: 'Kalimantan Utara' },
+  { name: 'Nunukan', alias: ['nunukan'], coords: [4.14, 117.67], region: 'Kalimantan Utara' },
+  // Sulawesi
+  { name: 'Makassar', alias: ['makassar', 'ujung pandang', 'mks'], coords: [-5.11, 119.40], region: 'Sulawesi Selatan' },
+  { name: 'Bitung', alias: ['bitung', 'manado', 'mnd'], coords: [1.44, 125.19], region: 'Sulawesi Utara' },
+  { name: 'Kendari', alias: ['kendari'], coords: [-3.97, 122.51], region: 'Sulawesi Tenggara' },
+  { name: 'Palu', alias: ['palu'], coords: [-0.90, 119.87], region: 'Sulawesi Tengah' },
+  { name: 'Gorontalo', alias: ['gorontalo'], coords: [0.54, 123.06], region: 'Gorontalo' },
+  // Bali & Nusa Tenggara
+  { name: 'Benoa', alias: ['bali', 'denpasar', 'benoa'], coords: [-8.77, 115.22], region: 'Bali' },
+  { name: 'Lembar', alias: ['lombok', 'mataram', 'lembar'], coords: [-8.72, 116.08], region: 'NTB' },
+  { name: 'Kupang', alias: ['kupang'], coords: [-10.17, 123.61], region: 'NTT' },
+  { name: 'Bima', alias: ['bima'], coords: [-8.46, 118.72], region: 'NTB' },
+  // Maluku & Papua
+  { name: 'Ambon', alias: ['ambon'], coords: [-3.69, 128.17], region: 'Maluku' },
+  { name: 'Ternate', alias: ['ternate'], coords: [0.79, 127.38], region: 'Maluku Utara' },
+  { name: 'Sorong', alias: ['sorong'], coords: [-0.87, 131.25], region: 'Papua Barat' },
+  { name: 'Jayapura', alias: ['jayapura', 'papua', 'irian'], coords: [-2.54, 140.72], region: 'Papua' },
+  { name: 'Merauke', alias: ['merauke'], coords: [-8.47, 140.40], region: 'Papua' },
+  { name: 'Manokwari', alias: ['manokwari'], coords: [-0.86, 134.07], region: 'Papua Barat' },
+  // Internasional
+  { name: 'Singapore', alias: ['singapore', 'singapura', 'sgp'], coords: [1.24, 103.84], region: 'Singapore' },
+  { name: 'Hong Kong', alias: ['hong kong', 'hongkong'], coords: [22.32, 114.17], region: 'Hong Kong' },
+  { name: 'Shanghai', alias: ['shanghai'], coords: [31.23, 121.47], region: 'China' },
+  { name: 'Tokyo', alias: ['tokyo', 'yokohama'], coords: [35.68, 139.65], region: 'Japan' },
+  { name: 'Busan', alias: ['busan'], coords: [35.18, 129.08], region: 'Korea' },
+  { name: 'Rotterdam', alias: ['rotterdam'], coords: [51.92, 4.48], region: 'Netherlands' },
+];
 
-function findPortCoords(name: string): [number, number] | null {
-  const lower = name.toLowerCase();
-  for (const [key, coords] of Object.entries(PORT_COORDS)) {
-    if (lower.includes(key)) return coords;
+// ─── Port Lookup: exact match → nearest fallback ─────────────────────
+function findPortCoords(name: string): { coords: [number, number]; portName: string; isFallback: boolean } | null {
+  const lower = name.toLowerCase().trim();
+
+  // 1. Exact / alias match
+  for (const port of PORT_DATABASE) {
+    if (port.alias.some(a => lower.includes(a))) {
+      return { coords: port.coords, portName: port.name, isFallback: false };
+    }
   }
+
+  // 2. Nearest port — rough heuristic by keyword geography
+  // Indonesia island regions
+  const isJawa = /\b(jawa|java|jogja|yogyakarta|bandung|bogor|bekasi|tangerang|depok|blitar|malang|kediri|mojokerto|jember|banyuwangi|madiun|tuban|lamongan|pasuruan)\b/.test(lower);
+  const isSumatra = /\b(sumatra|sumatera|medan|riau|jambi|bengkulu|aceh|palembang|pekanbaru|padang)\b/.test(lower);
+  const isKalimantan = /\b(kalimantan|borneo|banjarbaru|martapura|sangatta|bontang)\b/.test(lower);
+  const isSulawesi = /\b(sulawesi|celebes|poso|luwu|bone|wajo|pinrang|kolaka|muna|buton)\b/.test(lower);
+  const isPapua = /\b(papua|irian|biak|nabire|wamena|timika|fakfak)\b/.test(lower);
+  const isNTT = /\b(ntt|nusa tenggara timur|flores|ende|maumere|larantuka|ruteng)\b/.test(lower);
+  const isNTB = /\b(ntb|nusa tenggara barat|sumbawa|dompu)\b/.test(lower);
+  const isMaluku = /\b(maluku|halmahera|tidore|banda|tual|saumlaki)\b/.test(lower);
+  const isBali = /\b(bali|ubud|kuta|badung|gianyar|tabanan|singaraja|jembrana)\b/.test(lower);
+
+  let nearestPortName: string | null = null;
+  if (isJawa) nearestPortName = 'Tanjung Priok'; // Default Jawa → Jakarta
+  else if (isSumatra) nearestPortName = 'Belawan';
+  else if (isKalimantan) nearestPortName = 'Balikpapan';
+  else if (isSulawesi) nearestPortName = 'Makassar';
+  else if (isPapua) nearestPortName = 'Jayapura';
+  else if (isNTT) nearestPortName = 'Kupang';
+  else if (isNTB) nearestPortName = 'Lembar';
+  else if (isMaluku) nearestPortName = 'Ambon';
+  else if (isBali) nearestPortName = 'Benoa';
+
+  if (nearestPortName) {
+    const port = PORT_DATABASE.find(p => p.name === nearestPortName);
+    if (port) return { coords: port.coords, portName: port.name, isFallback: true };
+  }
+
   return null;
 }
 
-// Ship icon
+// ─── Icons ──────────────────────────────────────────────────────────
 const shipIcon = new L.DivIcon({
   className: 'tracking-ship-icon',
   html: `<div style="
@@ -55,7 +117,6 @@ const shipIcon = new L.DivIcon({
   iconAnchor: [9, 9],
 });
 
-// Port icon
 function createPortIcon(color: string) {
   return new L.DivIcon({
     className: 'tracking-port-icon',
@@ -72,10 +133,29 @@ function createPortIcon(color: string) {
   });
 }
 
+function createFallbackIcon(color: string) {
+  return new L.DivIcon({
+    className: 'tracking-port-icon',
+    html: `<div style="
+      background: ${color};
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 8px 2px ${color}80;
+      border: 2px dashed white;
+      opacity: 0.8;
+    "></div>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+  });
+}
+
 const originIcon = createPortIcon('#4ade80');
 const destIcon = createPortIcon('#ef4444');
+const originFallbackIcon = createFallbackIcon('#4ade80');
+const destFallbackIcon = createFallbackIcon('#ef4444');
 
-// Auto-fit bounds
+// ─── FitBounds helper ────────────────────────────────────────────────
 function FitBounds({ points }: { points: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
@@ -89,6 +169,7 @@ function FitBounds({ points }: { points: [number, number][] }) {
   return null;
 }
 
+// ─── Main Component ──────────────────────────────────────────────────
 interface TrackingMapProps {
   origin: string;
   destination: string;
@@ -99,19 +180,14 @@ interface TrackingMapProps {
   status: string;
 }
 
-function TrackingMapComponent({
-  origin,
-  destination,
-  vesselName,
-  vesselType,
-  vesselLat,
-  vesselLng,
-  status,
-}: TrackingMapProps) {
-  const originCoords = findPortCoords(origin);
-  const destCoords = findPortCoords(destination);
+function TrackingMapComponent({ origin, destination, vesselName, vesselType, vesselLat, vesselLng, status }: TrackingMapProps) {
+  const originResult = findPortCoords(origin);
+  const destResult = findPortCoords(destination);
 
-  // Determine ship position
+  const originCoords = originResult?.coords ?? null;
+  const destCoords = destResult?.coords ?? null;
+
+  // Ship position
   let shipPosition: [number, number] | null = null;
   if (vesselLat && vesselLng) {
     shipPosition = [vesselLat, vesselLng];
@@ -121,18 +197,7 @@ function TrackingMapComponent({
     shipPosition = originCoords;
   }
 
-  // Build route line
-  const routePoints: [number, number][] = [];
-  if (originCoords) routePoints.push(originCoords);
-  if (shipPosition && originCoords && destCoords) {
-    // Only add ship position to route if it's different from origin/dest
-    const isDiffFromOrigin = Math.abs(shipPosition[0] - originCoords[0]) > 0.01 || Math.abs(shipPosition[1] - originCoords[1]) > 0.01;
-    const isDiffFromDest = Math.abs(shipPosition[0] - destCoords[0]) > 0.01 || Math.abs(shipPosition[1] - destCoords[1]) > 0.01;
-    if (isDiffFromOrigin && isDiffFromDest) routePoints.push(shipPosition);
-  }
-  if (destCoords) routePoints.push(destCoords);
-
-  // Points for fitting bounds
+  // Route points
   const allPoints: [number, number][] = [];
   if (originCoords) allPoints.push(originCoords);
   if (destCoords) allPoints.push(destCoords);
@@ -142,18 +207,33 @@ function TrackingMapComponent({
 
   if (!hasMapData) {
     return (
-      <div className="w-full h-[300px] rounded-xl border border-white/10 bg-[#121217] flex flex-col items-center justify-center">
-        <p className="text-zinc-500 font-mono text-sm">Lokasi pelabuhan tidak tersedia di peta.</p>
-        <p className="text-zinc-600 text-xs mt-1">{origin} → {destination}</p>
+      <div className="w-full h-[300px] rounded-xl border border-white/10 bg-[#0d0d12] flex flex-col items-center justify-center text-center px-6">
+        <div className="text-3xl mb-3">🌊</div>
+        <p className="text-zinc-500 font-mono text-sm">Koordinat pelabuhan tidak tersedia.</p>
+        <p className="text-zinc-600 text-xs mt-1 font-mono">{origin} → {destination}</p>
+        <p className="text-zinc-700 text-[10px] mt-3">Gunakan nama pelabuhan resmi — lihat daftar di halaman Booking.</p>
       </div>
     );
   }
 
-  const center: [number, number] = allPoints.length > 0 ? allPoints[0] : [0, 0];
+  const center: [number, number] = allPoints[0];
 
   return (
-    <div className="w-full h-[300px] rounded-xl overflow-hidden border border-white/10 glow-border relative">
-      {/* Status overlay */}
+    <div className="w-full h-[340px] rounded-xl overflow-hidden border border-white/10 relative">
+      {/* Fallback notices */}
+      {(originResult?.isFallback || destResult?.isFallback) && (
+        <div className="absolute top-3 left-3 z-[400] bg-amber-500/20 border border-amber-500/40 backdrop-blur-md rounded-lg px-3 py-2 max-w-xs">
+          <p className="text-[10px] font-mono text-amber-300 font-bold uppercase tracking-widest mb-1">⚠ Pelabuhan Terdekat</p>
+          {originResult?.isFallback && (
+            <p className="text-[10px] text-amber-200/80">Asal: menampilkan <span className="font-bold">{originResult.portName}</span></p>
+          )}
+          {destResult?.isFallback && (
+            <p className="text-[10px] text-amber-200/80">Tujuan: menampilkan <span className="font-bold">{destResult.portName}</span></p>
+          )}
+        </div>
+      )}
+
+      {/* Status badge */}
       <div className="absolute top-3 right-3 z-[400] flex flex-col items-end gap-1">
         {status === 'IN_TRANSIT' && (
           <div className="bg-blue-500/20 border border-blue-500/50 backdrop-blur-md px-2 py-1 rounded-lg">
@@ -171,11 +251,15 @@ function TrackingMapComponent({
       <div className="absolute bottom-3 left-3 z-[400] bg-black/70 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 space-y-1">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block" />
-          <span className="text-[10px] text-zinc-300 font-mono">Asal</span>
+          <span className="text-[10px] text-zinc-300 font-mono">
+            Asal{originResult?.isFallback ? ` (≈ ${originResult.portName})` : ''}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
-          <span className="text-[10px] text-zinc-300 font-mono">Tujuan</span>
+          <span className="text-[10px] text-zinc-300 font-mono">
+            Tujuan{destResult?.isFallback ? ` (≈ ${destResult.portName})` : ''}
+          </span>
         </div>
         {shipPosition && (
           <div className="flex items-center gap-2">
@@ -185,51 +269,27 @@ function TrackingMapComponent({
         )}
       </div>
 
-      <MapContainer
-        center={center}
-        zoom={4}
-        style={{ height: '100%', width: '100%', background: '#0a0a0c' }}
-        attributionControl={false}
-      >
+      <MapContainer center={center} zoom={4} style={{ height: '100%', width: '100%', background: '#0a0a0c' }} attributionControl={false}>
         <FitBounds points={allPoints} />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
-        {/* Route line (dashed for planned, solid for traveled) */}
-        {routePoints.length >= 2 && (
-          <>
-            {/* Full planned route (dashed) */}
-            {originCoords && destCoords && (
-              <Polyline
-                positions={[originCoords, destCoords]}
-                pathOptions={{
-                  color: '#a855f7',
-                  weight: 2,
-                  opacity: 0.3,
-                  dashArray: '8, 8',
-                }}
-              />
-            )}
-            {/* Traveled route (solid) */}
-            {shipPosition && originCoords && (
-              <Polyline
-                positions={[originCoords, shipPosition]}
-                pathOptions={{
-                  color: '#a855f7',
-                  weight: 3,
-                  opacity: 0.8,
-                }}
-              />
-            )}
-          </>
+        {/* Planned route (dashed) */}
+        {originCoords && destCoords && (
+          <Polyline positions={[originCoords, destCoords]} pathOptions={{ color: '#a855f7', weight: 2, opacity: 0.3, dashArray: '8, 8' }} />
+        )}
+        {/* Traveled route (solid) */}
+        {shipPosition && originCoords && (
+          <Polyline positions={[originCoords, shipPosition]} pathOptions={{ color: '#a855f7', weight: 3, opacity: 0.8 }} />
         )}
 
         {/* Origin marker */}
         {originCoords && (
-          <Marker position={originCoords} icon={originIcon}>
+          <Marker position={originCoords} icon={originResult?.isFallback ? originFallbackIcon : originIcon}>
             <Popup>
-              <div className="bg-[#121217] text-white p-2 rounded font-sans min-w-[150px]">
+              <div className="bg-[#121217] text-white p-2 rounded font-sans min-w-[160px]">
                 <p className="text-green-400 font-bold text-xs uppercase">Pelabuhan Asal</p>
-                <p className="text-white text-sm font-semibold mt-1">{origin}</p>
+                {originResult?.isFallback && <p className="text-amber-400 text-[10px] mt-0.5">⚠ Terdekat dari "{origin}"</p>}
+                <p className="text-white text-sm font-semibold mt-1">{originResult?.portName}</p>
               </div>
             </Popup>
           </Marker>
@@ -237,11 +297,12 @@ function TrackingMapComponent({
 
         {/* Destination marker */}
         {destCoords && (
-          <Marker position={destCoords} icon={destIcon}>
+          <Marker position={destCoords} icon={destResult?.isFallback ? destFallbackIcon : destIcon}>
             <Popup>
-              <div className="bg-[#121217] text-white p-2 rounded font-sans min-w-[150px]">
+              <div className="bg-[#121217] text-white p-2 rounded font-sans min-w-[160px]">
                 <p className="text-red-400 font-bold text-xs uppercase">Pelabuhan Tujuan</p>
-                <p className="text-white text-sm font-semibold mt-1">{destination}</p>
+                {destResult?.isFallback && <p className="text-amber-400 text-[10px] mt-0.5">⚠ Terdekat dari "{destination}"</p>}
+                <p className="text-white text-sm font-semibold mt-1">{destResult?.portName}</p>
               </div>
             </Popup>
           </Marker>
@@ -275,10 +336,7 @@ function TrackingMapComponent({
           border: 1px solid rgba(168, 85, 247, 0.4);
           box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
         }
-        .leaflet-popup-tip {
-          background: #121217;
-          border: 1px solid rgba(168, 85, 247, 0.4);
-        }
+        .leaflet-popup-tip { background: #121217; }
       `}</style>
     </div>
   );

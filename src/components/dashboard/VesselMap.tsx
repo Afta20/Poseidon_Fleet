@@ -143,26 +143,31 @@ const VesselMapComponent: React.FC<MapProps> = ({ vessels, selectedVesselId, map
                     {/* Real shipment data */}
                     <div className="mt-2 pt-2 border-t border-white/20">
                       <p className="text-[10px] font-mono text-zinc-500 uppercase mb-1">Muatan Aktif</p>
-                      {(vessel as any).shipments && (vessel as any).shipments.length > 0 ? (
-                        <div className="space-y-1">
-                          {(vessel as any).shipments.slice(0, 3).map((s: any) => (
-                            <div key={s.id} className="bg-black/40 rounded px-2 py-1">
-                              <p className="text-xs font-bold text-white">{s.title}</p>
-                              <p className="text-[10px] text-zinc-400 font-mono">
-                                {s.origin} → {s.destination} • {s.weight}Kg
-                              </p>
-                              <p className="text-[10px] text-primary font-mono">
-                                {s.customer?.name || '-'} • {s.status}
-                              </p>
+                      {(() => {
+                        const activeShipments = (vessel as any).shipments?.filter((s: any) => s.status !== 'ARRIVED' && s.status !== 'REJECTED') || [];
+                        if (activeShipments.length > 0) {
+                          return (
+                            <div className="space-y-1">
+                              {activeShipments.slice(0, 3).map((s: any) => (
+                                <div key={s.id} className="bg-black/40 rounded px-2 py-1">
+                                  <p className="text-xs font-bold text-white">{s.title}</p>
+                                  <p className="text-[10px] text-zinc-400 font-mono">
+                                    {s.origin} → {s.destination} • {s.weight}Kg
+                                  </p>
+                                  <p className="text-[10px] text-primary font-mono">
+                                    {s.customer?.name || '-'} • {s.status}
+                                  </p>
+                                </div>
+                              ))}
+                              {activeShipments.length > 3 && (
+                                <p className="text-[10px] text-zinc-500 font-mono">+{activeShipments.length - 3} muatan lainnya</p>
+                              )}
                             </div>
-                          ))}
-                          {(vessel as any).shipments.length > 3 && (
-                            <p className="text-[10px] text-zinc-500 font-mono">+{(vessel as any).shipments.length - 3} muatan lainnya</p>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-zinc-500 italic">Kosong</p>
-                      )}
+                          );
+                        } else {
+                          return <p className="text-xs text-zinc-500 italic">Kosong</p>;
+                        }
+                      })()}
                     </div>
                   </div>
                 </Popup>

@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, History, X, Banknote, Shield, Users } from 'lucide-react';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
@@ -14,6 +14,12 @@ export const UserCrud = () => {
    const [isEditing, setIsEditing] = useState(false);
    const [searchQuery, setSearchQuery] = useState('');
    const [currentPage, setCurrentPage] = useState(1);
+   
+   // Elegant staff/customer splitting & customer history modal states
+   const [roleTab, setRoleTab] = useState<'staff' | 'customer'>('staff');
+   const [historyUser, setHistoryUser] = useState<any | null>(null);
+   const [shipments, setShipments] = useState<any[]>([]);
+   const [loadingShipments, setLoadingShipments] = useState(false);
 
    const fetchUsers = async () => {
       setLoading(true);
@@ -58,8 +64,28 @@ export const UserCrud = () => {
       if (res.ok) fetchUsers();
    };
 
-   // Search filter
+   const handleViewHistory = async (user: any) => {
+      setHistoryUser(user);
+      setLoadingShipments(true);
+      try {
+         const res = await fetch('/api/shipments');
+         const data = await res.json();
+         if (data.shipments) {
+            const filtered = data.shipments.filter((s: any) => s.customerId === user.id);
+            setShipments(filtered);
+         }
+      } catch (err) {
+         console.error('Error fetching customer shipments:', err);
+      }
+      setLoadingShipments(false);
+   };
+
+   // Search & Tab role filter
    const filteredUsers = users.filter(user => {
+      const isStaff = user.role === 'ADMIN' || user.role === 'MONITORING';
+      const matchesTab = roleTab === 'staff' ? isStaff : !isStaff;
+      if (!matchesTab) return false;
+
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
       return (
@@ -120,8 +146,8 @@ export const UserCrud = () => {
             </form>
          </div>
 
-          {/* Tabel */}
-         <div className="lg:col-span-2 bg-[#1a1a21] border border-white/5 rounded-xl">
+         {/* Tabel */}
+         <div className="lg:col-span-2 bg-[#1a1a21] border border-white/5 rounded-xl overflow-hidden">
             {/* Search Bar */}
             <div className="p-4 border-b border-white/5">
                <SearchInput
@@ -129,6 +155,30 @@ export const UserCrud = () => {
                   onChange={handleSearchChange}
                   placeholder="Search by name, email, or role..."
                />
+            </div>
+
+            {/* Elegant Role Tabs */}
+            <div className="flex border-b border-white/5 bg-black/20 p-2 gap-2">
+               <button
+                  onClick={() => { setRoleTab('staff'); setCurrentPage(1); }}
+                  className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-lg transition-all ${
+                     roleTab === 'staff'
+                        ? 'bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]'
+                        : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
+                  }`}
+               >
+                  Staff & Operator ({users.filter(u => u.role === 'ADMIN' || u.role === 'MONITORING').length})
+               </button>
+               <button
+                  onClick={() => { setRoleTab('customer'); setCurrentPage(1); }}
+                  className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-lg transition-all ${
+                     roleTab === 'customer'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
+                        : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
+                  }`}
+               >
+                  Customer / Pelanggan ({users.filter(u => u.role === 'CUSTOMER').length})
+               </button>
             </div>
 
             {loading ? (
@@ -160,7 +210,16 @@ export const UserCrud = () => {
                                  {user.role}
                               </span>
                            </td>
-                           <td className="px-5 py-4 text-right flex justify-end space-x-2">
+                           <td className="px-5 py-4 text-right flex justify-end items-center gap-2">
+                              {roleTab === 'customer' && (
+                                 <button
+                                    onClick={() => handleViewHistory(user)}
+                                    className="p-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 rounded transition-colors"
+                                    title="Lihat Riwayat Booking"
+                                 >
+                                    <History size={14} />
+                                 </button>
+                              )}
                               <button onClick={() => handleEdit(user)} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-white transition-colors"><Pencil size={14} /></button>
                               <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
                            </td>
@@ -184,6 +243,71 @@ export const UserCrud = () => {
                </div>
             )}
          </div>
+
+         {/* Floating Glassmorphic Customer History Modal */}
+         {historyUser && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+               <div className="bg-[#121217] border border-primary/30 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in fade-in zoom-in-95 duration-200">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between p-5 border-b border-white/5">
+                     <div>
+                        <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                           <History className="text-primary" size={18} />
+                           Riwayat Booking: <span className="text-primary font-mono">{historyUser.name}</span>
+                        </h3>
+                        <p className="text-xs text-zinc-500 mt-1">{historyUser.email}</p>
+                     </div>
+                     <button
+                        onClick={() => setHistoryUser(null)}
+                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white"
+                     >
+                        <X size={18} />
+                     </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                     {loadingShipments ? (
+                        <div className="py-20 flex flex-col items-center justify-center">
+                           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+                           <p className="text-sm text-zinc-500 font-mono">Mengambil riwayat kargo...</p>
+                        </div>
+                     ) : shipments.length === 0 ? (
+                        <div className="text-center py-20 text-zinc-500 font-mono border border-dashed border-white/5 rounded-xl bg-black/10">
+                           Belum ada riwayat booking untuk pelanggan ini.
+                        </div>
+                     ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           {shipments.map((s: any) => (
+                              <div key={s.id} className="bg-black/30 border border-white/5 rounded-xl p-4 space-y-3 hover:border-primary/20 transition-colors">
+                                 <div className="flex justify-between items-start gap-2">
+                                    <div>
+                                       <h4 className="font-bold text-white text-sm">{s.title}</h4>
+                                       <span className="text-[10px] text-zinc-600 font-mono">RESI: {s.id}</span>
+                                    </div>
+                                    <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded ${
+                                       s.status === 'ARRIVED' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                       s.status === 'IN_TRANSIT' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                                       s.status === 'REJECTED' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                                       'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                    }`}>
+                                       {s.status}
+                                    </span>
+                                 </div>
+                                 <div className="text-xs text-zinc-400 space-y-1">
+                                    <p className="flex justify-between"><span className="text-zinc-600">Rute:</span> <span>{s.origin} → {s.destination}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-600">Berat/Vol:</span> <span>{s.weight} Kg {s.volume ? `• ${s.volume} m³` : ''}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-600">Biaya:</span> <span className="text-emerald-400 font-mono font-bold">Rp {s.cost ? s.cost.toLocaleString('id-ID') : '0'}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-600">Pembayaran:</span> <span className={`font-bold ${s.paymentStatus === 'PAID' ? 'text-green-400' : 'text-red-400'}`}>{s.paymentStatus === 'PAID' ? '✓ PAID' : '✗ UNPAID'}</span></p>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     )}
+                  </div>
+               </div>
+            </div>
+         )}
       </div>
    );
 }

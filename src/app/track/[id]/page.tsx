@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { db } from '@/lib/db';
-import { Package, Ship, AlertTriangle, ArrowLeft, MapPin, Weight, Navigation } from 'lucide-react';
+import { Package, Ship, AlertTriangle, ArrowLeft, MapPin, Weight, Navigation, Banknote, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { TrackingProgress } from '@/components/tracking/TrackingProgress';
@@ -68,7 +68,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-white/10 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-5 py-6 border-y border-white/10 mb-6">
                 <div>
                   <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
                     <MapPin size={10} className="mr-1" /> Asal
@@ -85,7 +85,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
                   <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
                     <Weight size={10} className="mr-1" /> Berat / Vol
                   </p>
-                  <p className="font-semibold">{shipment.weight} Kg / {shipment.volume || '-'} m³</p>
+                  <p className="font-semibold">{shipment.weight} Kg / {shipment.volume ?? '-'} m³</p>
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold">Armada Kapal</p>
@@ -96,6 +96,44 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
                   {shipment.vessel && (
                     <p className="text-xs text-zinc-500 font-mono mt-0.5">{shipment.vessel.type}</p>
                   )}
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
+                    <Zap size={10} className="mr-1" /> Layanan
+                  </p>
+                  <p className="font-semibold">
+                    {(shipment as any).deliveryType === 'VVIP' ? '⚡ Priority' :
+                     (shipment as any).deliveryType === 'CEPAT' ? '🚀 Express' : '📦 Reguler'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
+                    <Banknote size={10} className="mr-1" /> Biaya Pengiriman
+                  </p>
+                  {(shipment as any).cost ? (
+                    <p className="font-bold text-lg text-emerald-400 font-mono">
+                      Rp {((shipment as any).cost as number).toLocaleString('id-ID')}
+                    </p>
+                  ) : (
+                    <p className="font-semibold text-zinc-500 text-sm italic">Menunggu konfirmasi admin</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
+                    <Banknote size={10} className="mr-1" /> Metode Bayar
+                  </p>
+                  <p className="font-semibold text-sm">
+                    {(shipment as any).paymentMethod === 'TRANSFER_BANK' ? '🏦 Transfer Bank' :
+                     (shipment as any).paymentMethod === 'E_WALLET' ? '📱 QRIS / E-Wallet' : '💵 COD (Pelabuhan)'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold flex items-center">
+                    💰 Status Bayar
+                  </p>
+                  <span className={`inline-flex items-center text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border mt-0.5 ${(shipment as any).paymentStatus === 'PAID' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'}`}>
+                    {(shipment as any).paymentStatus === 'PAID' ? '✓ LUNAS' : '✗ BELUM DIBAYAR'}
+                  </span>
                 </div>
               </div>
 
