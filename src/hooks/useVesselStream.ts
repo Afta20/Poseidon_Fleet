@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { VesselWithLatestLog, VesselStatus } from '@/types';
-import { PORT_DATABASE } from '@/components/tracking/TrackingMap';
+import { PORT_DATABASE } from '@/lib/ports';
 
 function findPortCoords(name: string): [number, number] | null {
   if (!name) return null;

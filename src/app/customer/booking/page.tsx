@@ -4,7 +4,7 @@ import { Megamenu } from '@/components/layout/Megamenu';
 import { ArrowLeft, Send, Package, MapPin, User, Phone, Weight, Zap, Ship, Calculator, Anchor, Search, ChevronDown, ChevronUp, Banknote, CreditCard, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PORT_DATABASE } from '@/components/tracking/TrackingMap';
+import { PORT_DATABASE } from '@/lib/ports';
 
 // ─── Pricing logic (mirrored from calculator) ─────────────────────────
 const DELIVERY_MULTIPLIERS: Record<string, number> = {
