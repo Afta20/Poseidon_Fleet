@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { Package, Ship, MapPin, User, Weight, ArrowRight, Check, X, Anchor, Navigation, Plus, Pencil, Trash2, Banknote, Phone, Zap } from 'lucide-react';
+import { Package, Ship, MapPin, User, Weight, ArrowRight, Check, X, Anchor, Navigation, Plus, Pencil, Trash2, Banknote, Phone, Zap, AlertTriangle, MessageCircle } from 'lucide-react';
 import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
@@ -44,6 +44,7 @@ export const BookingCrud = () => {
    const [searchQuery, setSearchQuery] = useState('');
    const [currentPage, setCurrentPage] = useState(1);
    const [expandedId, setExpandedId] = useState<string | null>(null);
+   const [activeTab, setActiveTab] = useState<'aktif' | 'selesai'>('aktif');
 
    // Form states
    const [showForm, setShowForm] = useState(false);
@@ -74,6 +75,17 @@ export const BookingCrud = () => {
    };
 
    useEffect(() => { fetchData(); }, []);
+
+   const handleWhatsApp = (shipment: any, vesselName: string | null) => {
+      if (!shipment.phone) return;
+      let phone = shipment.phone.replace(/[^0-9]/g, '');
+      if (phone.startsWith('0')) {
+         phone = '62' + phone.substring(1);
+      }
+      const vesselText = vesselName ? `menggunakan armada kapal *${vesselName}*` : '';
+      const text = `Halo *${shipment.receiverName || 'Pelanggan'}*, pesanan kargo Anda dengan Resi *${shipment.id}* saat ini berstatus *${STATUS_CONFIG[shipment.status]?.label || shipment.status}* ${vesselText}.\n\nAda yang bisa kami bantu terkait pengiriman ini?`;
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+   };
 
    const updateStatus = async (id: string, newStatus: string, vesselId?: string) => {
       try {
@@ -167,6 +179,13 @@ export const BookingCrud = () => {
    };
 
    const filteredShipments = shipments.filter(s => {
+      // Filter by tab first
+      const isAktif = ['PENDING', 'APPROVED', 'IN_TRANSIT'].includes(s.status);
+      const isSelesai = ['ARRIVED', 'REJECTED'].includes(s.status);
+      
+      if (activeTab === 'aktif' && !isAktif) return false;
+      if (activeTab === 'selesai' && !isSelesai) return false;
+
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
       return (
@@ -192,6 +211,12 @@ export const BookingCrud = () => {
       setSearchQuery(value);
       setCurrentPage(1);
    }, []);
+
+   const handleTabChange = (tab: 'aktif' | 'selesai') => {
+      setActiveTab(tab);
+      setCurrentPage(1);
+      setExpandedId(null);
+   };
 
    const getVesselName = (vesselId: string) => {
       const v = vessels.find(v => v.id === vesselId);
@@ -225,6 +250,30 @@ export const BookingCrud = () => {
                   <Plus size={16} /> Tambah Pesanan
                </button>
             </div>
+         </div>
+
+         {/* Tabs */}
+         <div className="flex items-center gap-2 border-b border-white/5 pb-4">
+            <button
+               onClick={() => handleTabChange('aktif')}
+               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                  activeTab === 'aktif' 
+                     ? 'bg-primary/20 text-primary border border-primary/30' 
+                     : 'text-zinc-500 hover:text-white hover:bg-white/5'
+               }`}
+            >
+               Berjalan / Aktif
+            </button>
+            <button
+               onClick={() => handleTabChange('selesai')}
+               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                  activeTab === 'selesai' 
+                     ? 'bg-zinc-800 text-white border border-white/10' 
+                     : 'text-zinc-500 hover:text-white hover:bg-white/5'
+               }`}
+            >
+               Selesai / Riwayat
+            </button>
          </div>
 
          {/* Form Panel */}
@@ -512,10 +561,24 @@ export const BookingCrud = () => {
                                     {s.status === 'PENDING' && (
                                        <div>
                                           <p className="text-xs text-zinc-500 mb-3 font-mono uppercase tracking-widest flex items-center gap-1"><Anchor size={11} className="text-zinc-500" /> Konfirmasi Pesanan</p>
+                                          {!(s.paymentMethod === 'COD' || s.paymentStatus === 'PAID') && (
+                                             <div className="mb-3 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2.5 text-amber-400 text-xs shadow-[0_0_15px_rgba(251,191,36,0.1)]">
+                                                <AlertTriangle size={14} className="mt-0.5 shrink-0" /> 
+                                                <div>
+                                                   <span className="font-bold block mb-0.5">Pembayaran Tertunda</span>
+                                                   <span className="opacity-80">Pesanan Transfer/QRIS harus ditandai Lunas terlebih dahulu sebelum di-approve.</span>
+                                                </div>
+                                             </div>
+                                          )}
                                           <div className="flex gap-3">
                                              <button
                                                 onClick={() => updateStatus(s.id, 'APPROVED')}
-                                                className="flex items-center gap-2 px-5 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(74,222,128,0.15)]"
+                                                disabled={!(s.paymentMethod === 'COD' || s.paymentStatus === 'PAID')}
+                                                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                                                   (s.paymentMethod === 'COD' || s.paymentStatus === 'PAID')
+                                                      ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 hover:shadow-[0_0_15px_rgba(74,222,128,0.15)]'
+                                                      : 'bg-zinc-800/50 text-zinc-600 border border-zinc-800 cursor-not-allowed'
+                                                }`}
                                              >
                                                 <Check size={14} /> Approve
                                              </button>
@@ -561,12 +624,22 @@ export const BookingCrud = () => {
                                              ))}
                                           </div>
                                           {s.vesselId && (
-                                             <button
-                                                onClick={() => updateStatus(s.id, 'IN_TRANSIT')}
-                                                className="flex items-center gap-2 px-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] mt-2"
-                                             >
-                                                <Navigation size={14} /> Berangkatkan Kapal
-                                             </button>
+                                             <div className="flex gap-3 mt-2">
+                                                <button
+                                                   onClick={() => updateStatus(s.id, 'IN_TRANSIT')}
+                                                   className="flex items-center gap-2 px-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+                                                >
+                                                   <Navigation size={14} /> Berangkatkan Kapal
+                                                </button>
+                                                {s.phone && (
+                                                   <button
+                                                      onClick={() => handleWhatsApp(s, vesselAssigned)}
+                                                      className="flex items-center gap-2 px-6 py-2.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(37,211,102,0.2)]"
+                                                   >
+                                                      <MessageCircle size={14} /> Chat WA Customer
+                                                   </button>
+                                                )}
+                                             </div>
                                           )}
                                        </div>
                                     )}
@@ -584,12 +657,22 @@ export const BookingCrud = () => {
                                                 </span>
                                              </p>
                                           )}
-                                          <button
-                                             onClick={() => updateStatus(s.id, 'ARRIVED')}
-                                             className="flex items-center gap-2 px-6 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(74,222,128,0.2)]"
-                                          >
-                                             <Check size={14} /> Tandai Sudah Tiba
-                                          </button>
+                                          <div className="flex gap-3">
+                                             <button
+                                                onClick={() => updateStatus(s.id, 'ARRIVED')}
+                                                className="flex items-center gap-2 px-6 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(74,222,128,0.2)]"
+                                             >
+                                                <Check size={14} /> Tandai Sudah Tiba
+                                             </button>
+                                             {s.phone && (
+                                                <button
+                                                   onClick={() => handleWhatsApp(s, vesselAssigned)}
+                                                   className="flex items-center gap-2 px-6 py-2.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(37,211,102,0.2)]"
+                                                >
+                                                   <MessageCircle size={14} /> Chat WA Customer
+                                                </button>
+                                             )}
+                                          </div>
                                        </div>
                                     )}
 

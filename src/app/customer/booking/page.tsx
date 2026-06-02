@@ -99,6 +99,7 @@ export default function BookingPage() {
   const [portSearch, setPortSearch] = useState('');
   const [portTarget, setPortTarget] = useState<'origin' | 'destination'>('origin');
   const [step, setStep] = useState(1);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     title: '',
@@ -145,6 +146,24 @@ export default function BookingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Custom validation
+    const errors: Record<string, string> = {};
+    if (!formData.title.trim()) errors.title = "Nama/Judul Barang wajib diisi";
+    if (!formData.weight || Number(formData.weight) <= 0) errors.weight = "Berat muatan wajib diisi";
+    if (!formData.origin) errors.origin = "Pilih pelabuhan asal";
+    if (!formData.destination) errors.destination = "Pilih pelabuhan tujuan";
+    if (!formData.senderName.trim()) errors.senderName = "Nama pengirim wajib diisi";
+    if (!formData.receiverName.trim()) errors.receiverName = "Nama penerima wajib diisi";
+    const phoneRegex = /^[0-9+\-\s]{10,15}$/;
+    if (!phoneRegex.test(formData.phone)) errors.phone = "Masukkan nomor telepon valid (10-15 digit angka)";
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      // Scroll to top or just let user see red borders
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('/api/shipments', {
@@ -158,7 +177,12 @@ export default function BookingPage() {
         })
       });
       if (res.ok) {
-        router.push('/customer');
+        const data = await res.json();
+        if (formData.paymentMethod === 'TRANSFER_BANK' || formData.paymentMethod === 'E_WALLET') {
+           router.push(`/customer/payment/${data.shipment.id}`);
+        } else {
+           router.push('/customer');
+        }
         router.refresh();
       } else {
         alert('Gagal membuat pesanan pengiriman.');
@@ -198,7 +222,7 @@ export default function BookingPage() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* ─── FORM ─── */}
-          <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="lg:col-span-2 space-y-6">
 
             {/* Section 1: Barang */}
             <div className="bg-[#121217] rounded-2xl border border-white/8 p-6 space-y-4">
@@ -208,9 +232,10 @@ export default function BookingPage() {
 
               <div>
                 <label className={labelCls}>Nama / Judul Barang *</label>
-                <input required type="text" className={inputCls} value={formData.title}
-                  onChange={e => set('title', e.target.value)}
+                <input required type="text" className={`${inputCls} ${formErrors.title ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.title}
+                  onChange={e => { setFormErrors(prev => ({...prev, title: ''})); set('title', e.target.value); }}
                   placeholder="Misal: Mesin Pabrik Industri 3 Ton" />
+                {formErrors.title && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.title}</p>}
               </div>
 
               <div>
@@ -224,10 +249,11 @@ export default function BookingPage() {
                 <div>
                   <label className={labelCls}>Berat Muatan (Kg) *</label>
                   <div className="relative">
-                    <input required type="number" min="1" className={inputCls + " pr-12"} value={formData.weight}
-                      onChange={e => set('weight', e.target.value)} placeholder="5000" />
+                    <input required type="number" min="1" className={`${inputCls} pr-12 ${formErrors.weight ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.weight}
+                      onChange={e => { setFormErrors(prev => ({...prev, weight: ''})); set('weight', e.target.value); }} placeholder="5000" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-600 font-mono">Kg</span>
                   </div>
+                  {formErrors.weight && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.weight}</p>}
                 </div>
                 <div>
                   <label className={labelCls}>Volume (m³)</label>
@@ -279,19 +305,21 @@ export default function BookingPage() {
                   <label className={labelCls}>Pelabuhan Asal *</label>
                   <div className="relative">
                     <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500" />
-                    <input required type="text" className={inputCls + " pl-9"} value={formData.origin}
-                      onChange={e => set('origin', e.target.value)} placeholder="Tanjung Priok, Jakarta"
+                    <input required type="text" className={`${inputCls} pl-9 ${formErrors.origin ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.origin}
+                      onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); set('origin', e.target.value); }} placeholder="Tanjung Priok, Jakarta"
                       onFocus={() => { setPortTarget('origin'); setShowPorts(true); }} />
                   </div>
+                  {formErrors.origin && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.origin}</p>}
                 </div>
                 <div>
                   <label className={labelCls}>Pelabuhan Tujuan *</label>
                   <div className="relative">
                     <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400" />
-                    <input required type="text" className={inputCls + " pl-9"} value={formData.destination}
-                      onChange={e => set('destination', e.target.value)} placeholder="Tanjung Perak, Surabaya"
+                    <input required type="text" className={`${inputCls} pl-9 ${formErrors.destination ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.destination}
+                      onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); set('destination', e.target.value); }} placeholder="Tanjung Perak, Surabaya"
                       onFocus={() => { setPortTarget('destination'); setShowPorts(true); }} />
                   </div>
+                  {formErrors.destination && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.destination}</p>}
                 </div>
               </div>
 
@@ -390,22 +418,24 @@ export default function BookingPage() {
                 <User size={14} className="text-primary" /> Informasi Pengirim & Penerima
               </h2>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Nama Pengirim *</label>
                   <div className="relative">
                     <User size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-                    <input required type="text" className={inputCls + " pl-9"} value={formData.senderName}
-                      onChange={e => set('senderName', e.target.value)} placeholder="Budi Santoso" />
+                    <input required type="text" className={`${inputCls} pl-9 ${formErrors.senderName ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.senderName}
+                      onChange={e => { setFormErrors(prev => ({...prev, senderName: ''})); set('senderName', e.target.value); }} placeholder="Budi Santoso" />
                   </div>
+                  {formErrors.senderName && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.senderName}</p>}
                 </div>
                 <div>
                   <label className={labelCls}>Nama Penerima *</label>
                   <div className="relative">
                     <User size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-                    <input required type="text" className={inputCls + " pl-9"} value={formData.receiverName}
-                      onChange={e => set('receiverName', e.target.value)} placeholder="Andi Wijaya" />
+                    <input required type="text" className={`${inputCls} pl-9 ${formErrors.receiverName ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.receiverName}
+                      onChange={e => { setFormErrors(prev => ({...prev, receiverName: ''})); set('receiverName', e.target.value); }} placeholder="Andi Wijaya" />
                   </div>
+                  {formErrors.receiverName && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.receiverName}</p>}
                 </div>
               </div>
 
@@ -413,9 +443,27 @@ export default function BookingPage() {
                 <label className={labelCls}>No. Telepon Kontak *</label>
                 <div className="relative">
                   <Phone size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-                  <input required type="tel" pattern="[0-9+\-\s]{10,15}" minLength={10} maxLength={15} title="Masukkan nomor telepon valid (10-15 digit angka)" className={inputCls + " pl-9"} value={formData.phone}
-                    onChange={e => set('phone', e.target.value.replace(/[^0-9+\-\s]/g, ''))} placeholder="08123456789" />
+                  <input 
+                    required 
+                    type="tel" 
+                    pattern="[0-9+\-\s]{10,15}" 
+                    minLength={10} 
+                    maxLength={15} 
+                    className={`${inputCls} pl-9 ${formErrors.phone ? 'border-red-500/50 bg-red-500/5' : ''}`} 
+                    value={formData.phone}
+                    onChange={e => {
+                      setFormErrors(prev => ({...prev, phone: ''}));
+                      set('phone', e.target.value.replace(/[^0-9+\-\s]/g, ''));
+                    }} 
+                    placeholder="08123456789" 
+                  />
                 </div>
+                {formErrors.phone && (
+                  <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
+                    <span className="w-1 h-1 rounded-full bg-red-500"></span>
+                    {formErrors.phone}
+                  </p>
+                )}
               </div>
             </div>
 

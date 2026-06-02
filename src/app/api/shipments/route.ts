@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import { generateTrackingId } from '@/lib/utils';
+import { sendBookingConfirmationEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
   try {
@@ -52,6 +53,12 @@ export async function POST(req: Request) {
         description: 'Pesanan pengiriman telah dibuat.'
       }
     });
+
+    // Send Email
+    const customer = await db.user.findUnique({ where: { id: customerId } });
+    if (customer && customer.email) {
+      await sendBookingConfirmationEmail(customer.email, customer.name, shipment);
+    }
 
     return NextResponse.json({ success: true, shipment });
   } catch (error) {
