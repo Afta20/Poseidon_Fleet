@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { useSession } from '@/hooks/useSession';
 import { useState } from 'react';
 import { Package, Pencil, Check, X as XIcon } from 'lucide-react';
+import { Pagination } from '@/components/ui/Pagination';
+
+const ITEMS_PER_PAGE = 4;
 
 export const FleetList: React.FC<{ 
   vessels: VesselWithLatestLog[]; 
@@ -17,6 +20,11 @@ export const FleetList: React.FC<{
   const isAdmin = session?.role === 'ADMIN';
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tempPayload, setTempPayload] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Pagination logic
+  const totalPages = Math.ceil(vessels.length / ITEMS_PER_PAGE);
+  const currentVessels = vessels.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handleEdit = (vessel: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,8 +62,9 @@ export const FleetList: React.FC<{
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
-      {vessels.map(vessel => {
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 pb-2">
+        {currentVessels.map(vessel => {
         const isLost = vessel.status === 'Signal Lost';
         const isDelayed = vessel.status === 'Delayed';
         
@@ -206,6 +215,19 @@ export const FleetList: React.FC<{
           </motion.div>
         );
       })}
+      </div>
+      
+      {totalPages > 1 && (
+        <div className="px-6 pb-6">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={vessels.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+          />
+        </div>
+      )}
     </div>
   );
 };

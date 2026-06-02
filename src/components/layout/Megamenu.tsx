@@ -100,7 +100,7 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
   dynamicMenuItems.unshift({ key: '', label: 'Beranda', icon: <Compass size={18} className="mr-2" />, submenus: [] });
 
   return (
-    <nav className="relative z-[999] w-full bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/10 text-white shadow-neon-text">
+    <nav className="sticky top-0 z-[9999] w-full bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/10 text-white shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">

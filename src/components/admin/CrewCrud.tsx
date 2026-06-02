@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
+import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
@@ -10,11 +11,13 @@ const ITEMS_PER_PAGE = 5;
 export const CrewCrud = () => {
    const [crews, setCrews] = useState<any[]>([]);
    const [vessels, setVessels] = useState<any[]>([]);
+   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
-   const [formData, setFormData] = useState({ name: '', position: 'Captain', vesselId: '', id: '' });
+   const [formData, setFormData] = useState({ name: '', position: 'Captain', vesselId: '', userId: '', id: '' });
    const [isEditing, setIsEditing] = useState(false);
    const [searchQuery, setSearchQuery] = useState('');
    const [currentPage, setCurrentPage] = useState(1);
+   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
    const fetchData = async () => {
       setLoading(true);
@@ -26,6 +29,7 @@ export const CrewCrud = () => {
         const crewData = await crewRes.json();
         const vesselData = await vesselRes.json();
         if (crewData.crew) setCrews(crewData.crew);
+        if (crewData.availableUsers) setAvailableUsers(crewData.availableUsers);
         if (vesselData.vessels) setVessels(vesselData.vessels);
       } catch(e) {
         console.error(e);
@@ -45,7 +49,7 @@ export const CrewCrud = () => {
          body: JSON.stringify(formData)
       });
       if (res.ok) {
-         setFormData({ name: '', position: 'Captain', vesselId: '', id: '' });
+         setFormData({ name: '', position: 'Captain', vesselId: '', userId: '', id: '' });
          setIsEditing(false);
          fetchData();
       } else {
@@ -55,12 +59,11 @@ export const CrewCrud = () => {
    };
 
    const handleEdit = (crew: any) => {
-      setFormData({ name: crew.name, position: crew.position, vesselId: crew.vesselId || '', id: crew.id });
+      setFormData({ name: crew.name, position: crew.position, vesselId: crew.vesselId || '', userId: crew.userId || '', id: crew.id });
       setIsEditing(true);
    };
 
    const handleDelete = async (id: string) => {
-      if (!confirm('Yakin ingin menghapus crew ini?')) return;
       const res = await fetch(`/api/crew/${id}`, { method: 'DELETE' });
       if (res.ok) fetchData();
    };
@@ -89,6 +92,21 @@ export const CrewCrud = () => {
                   <label className="text-xs text-zinc-400 font-mono">Crew Name</label>
                   <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary" required />
                </div>
+               {!isEditing && availableUsers.length > 0 && (
+                  <div>
+                     <label className="text-xs text-zinc-400 font-mono">Link to App Account (Optional)</label>
+                     <select value={formData.userId} onChange={e => {
+                        const uid = e.target.value;
+                        const user = availableUsers.find(u => u.id === uid);
+                        setFormData({...formData, userId: uid, name: user ? user.name : formData.name});
+                     }} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary">
+                        <option value="">-- No Account --</option>
+                        {availableUsers.map(u => (
+                           <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                        ))}
+                     </select>
+                  </div>
+               )}
                <div>
                   <label className="text-xs text-zinc-400 font-mono">Position / Role</label>
                   <select value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary">
@@ -111,7 +129,7 @@ export const CrewCrud = () => {
                      {isEditing ? 'Update' : 'Assign'}
                   </button>
                   {isEditing && (
-                     <button type="button" onClick={() => { setIsEditing(false); setFormData({ name: '', position: 'Captain', vesselId: '', id: '' }) }} className="px-4 bg-zinc-800 hover:bg-zinc-700 rounded text-white text-sm uppercase tracking-widest font-bold">Cancel</button>
+                     <button type="button" onClick={() => { setIsEditing(false); setFormData({ name: '', position: 'Captain', vesselId: '', userId: '', id: '' }) }} className="px-4 bg-zinc-800 hover:bg-zinc-700 rounded text-white text-sm uppercase tracking-widest font-bold">Cancel</button>
                   )}
                </div>
             </form>
@@ -154,7 +172,7 @@ export const CrewCrud = () => {
                            </td>
                            <td className="px-5 py-4 text-right flex justify-end space-x-2">
                               <button onClick={() => handleEdit(crew)} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-white transition-colors"><Pencil size={14} /></button>
-                              <button onClick={() => handleDelete(crew.id)} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
+                              <button onClick={() => setDeleteTarget({ id: crew.id, name: crew.name })} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
                            </td>
                         </tr>
                      );
@@ -169,6 +187,13 @@ export const CrewCrud = () => {
                </div>
             )}
          </div>
+         <DeleteConfirmModal
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id); }}
+            title="Hapus Crew Member"
+            itemName={deleteTarget?.name}
+         />
       </div>
    );
 }

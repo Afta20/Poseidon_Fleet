@@ -34,12 +34,23 @@ export async function middleware(request: NextRequest) {
     if (!session) return NextResponse.redirect(new URL('/login', request.url));
     if (session.role === 'MONITORING') return NextResponse.redirect(new URL('/dashboard', request.url));
     if (session.role === 'CUSTOMER') return NextResponse.redirect(new URL('/customer', request.url));
+    if (session.role === 'CREW') return NextResponse.redirect(new URL('/crew', request.url));
+  }
+
+  // === CREW routes: only CREW ===
+  if (pathname.startsWith('/crew')) {
+    if (!session) return NextResponse.redirect(new URL('/login', request.url));
+    if (session.role !== 'CREW') {
+      if (session.role === 'ADMIN') return NextResponse.redirect(new URL('/admin', request.url));
+      if (session.role === 'MONITORING') return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/customer', request.url));
+    }
   }
 
   // === Protect admin-only API routes ===
   if (
     pathname.startsWith('/api/users') ||
-    pathname.startsWith('/api/crew') ||
+    (pathname.startsWith('/api/crew') && !pathname.startsWith('/api/crew/dashboard')) ||
     pathname.startsWith('/api/reports') ||
     (pathname.startsWith('/api/vessels') && ['POST', 'PUT', 'DELETE'].includes(request.method))
   ) {
@@ -68,5 +79,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/:path*', '/customer/:path*', '/dashboard/:path*', '/fleet/:path*', '/map/:path*', '/analytics/:path*', '/change-password'],
+  matcher: ['/admin/:path*', '/api/:path*', '/customer/:path*', '/dashboard/:path*', '/fleet/:path*', '/map/:path*', '/analytics/:path*', '/change-password', '/crew/:path*'],
 };

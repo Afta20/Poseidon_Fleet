@@ -5,6 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { PORT_DATABASE } from '@/lib/ports';
+import { getSeaRoute } from '@/lib/routing';
 
 // ─── Port Lookup: exact match → nearest fallback ─────────────────────
 function findPortCoords(name: string): { coords: [number, number]; portName: string; isFallback: boolean } | null {
@@ -222,9 +223,9 @@ function TrackingMapComponent({ origin, destination, vesselName, vesselType, ves
 
         {/* Planned route (dashed) */}
         {originCoords && destCoords && (
-          <Polyline positions={[originCoords, destCoords]} pathOptions={{ color: '#a855f7', weight: 2, opacity: 0.3, dashArray: '8, 8' }} />
+          <Polyline positions={getSeaRoute(originCoords, destCoords)} pathOptions={{ color: '#a855f7', weight: 2, opacity: 0.3, dashArray: '8, 8' }} />
         )}
-        {/* Traveled route (solid) */}
+        {/* Traveled route (solid) - simplified to just connect origin to ship for now, or just show ship marker over planned route */}
         {shipPosition && originCoords && (
           <Polyline positions={[originCoords, shipPosition]} pathOptions={{ color: '#a855f7', weight: 3, opacity: 0.8 }} />
         )}

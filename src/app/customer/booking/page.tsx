@@ -1,31 +1,96 @@
 "use client"
 import React, { useState, useMemo } from 'react';
 import { Megamenu } from '@/components/layout/Megamenu';
-import { ArrowLeft, Send, Package, MapPin, User, Phone, Weight, Zap, Ship, Calculator, Anchor, Search, ChevronDown, ChevronUp, Banknote, CreditCard, Wallet } from 'lucide-react';
+import { ArrowLeft, Send, Package, MapPin, User, Phone, Weight, Zap, Ship, Calculator, Anchor, Search, ChevronDown, ChevronUp, Banknote, CreditCard, Wallet, Navigation, Info, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PORT_DATABASE } from '@/lib/ports';
+import { getHaversineDistance, resolvePortCoords, getDistanceMultiplier, getRouteDescription } from '@/lib/navigation';
 
-// ─── Pricing logic (mirrored from calculator) ─────────────────────────
+// ─── Pricing logic (distance-aware) ─────────────────────────────────
 const DELIVERY_MULTIPLIERS: Record<string, number> = {
   BIASA: 1.0,
   CEPAT: 1.5,
   VVIP: 2.5,
 };
 
-function calcCost(weight: number, type: string, deliveryType: string): number {
-  if (!weight || weight <= 0) return 0;
-  const base = type === 'FCL' ? 8_000_000 : 1_500_000;
-  const weightCost = weight * 6_500;
-  const multiplier = DELIVERY_MULTIPLIERS[deliveryType] ?? 1;
-  return Math.round((base + weightCost) * multiplier);
+const PAYMENT_FEES: Record<string, { label: string; fee: number }> = {
+  TRANSFER_BANK: { label: 'Transfer Bank (VA)', fee: 0 },
+  E_WALLET: { label: 'QRIS / E-Wallet', fee: 2500 },
+  COD: { label: 'Cash on Port', fee: 5000 },
+};
+
+interface PricingBreakdown {
+  baseCost: number;
+  weightCost: number;
+  distanceCost: number;
+  distanceMultiplierValue: number;
+  distanceMultiplierLabel: string;
+  deliveryMultiplier: number;
+  paymentFee: number;
+  subtotal: number;
+  total: number;
+  distanceKm: number;
+}
+
+function calcAdvancedCost(
+  weight: number,
+  type: string,
+  deliveryType: string,
+  origin: string,
+  destination: string,
+  paymentMethod: string
+): PricingBreakdown {
+  const baseCost = type === 'FCL' ? 8_000_000 : 1_500_000;
+  const weightCost = weight > 0 ? weight * 6_500 : 0;
+
+  // Distance calculation
+  const originCoords = resolvePortCoords(origin);
+  const destCoords = resolvePortCoords(destination);
+  let distanceKm = 0;
+  if (originCoords && destCoords) {
+    distanceKm = getHaversineDistance(originCoords, destCoords);
+  }
+  const distanceCost = distanceKm * 2_500;
+  const { multiplier: distanceMultiplierValue, label: distanceMultiplierLabel } = getDistanceMultiplier(distanceKm);
+
+  const deliveryMultiplier = DELIVERY_MULTIPLIERS[deliveryType] ?? 1;
+  const paymentFee = PAYMENT_FEES[paymentMethod]?.fee ?? 0;
+
+  const subtotal = (baseCost + weightCost + distanceCost) * distanceMultiplierValue;
+  const total = Math.round(subtotal * deliveryMultiplier + paymentFee);
+
+  return {
+    baseCost,
+    weightCost,
+    distanceCost,
+    distanceMultiplierValue,
+    distanceMultiplierLabel,
+    deliveryMultiplier,
+    paymentFee,
+    subtotal,
+    total,
+    distanceKm,
+  };
 }
 
 const DELIVERY_OPTS = [
-  { value: 'BIASA', label: 'Reguler', desc: '7–14 hari', color: 'text-zinc-300', icon: Ship },
-  { value: 'CEPAT', label: 'Express', desc: '3–5 hari', color: 'text-amber-400', icon: Zap },
-  { value: 'VVIP', label: 'Priority', desc: '1–2 hari', color: 'text-purple-400', icon: Zap },
+  { value: 'BIASA', label: 'Reguler', icon: Ship },
+  { value: 'CEPAT', label: 'Express', icon: Zap },
+  { value: 'VVIP', label: 'Priority', icon: Zap },
 ];
+
+// Dynamic delivery time estimation based on distance
+function getDeliveryTime(deliveryType: string, distanceKm: number): string {
+  if (distanceKm <= 0) {
+    return deliveryType === 'BIASA' ? '7–14 hari' : deliveryType === 'CEPAT' ? '3–5 hari' : '1–2 hari';
+  }
+  // avg cargo speed ~37 km/h = 888 km/day
+  const baseDays = Math.max(1, Math.ceil(distanceKm / 888));
+  if (deliveryType === 'BIASA') return `${baseDays + 3}–${baseDays + 7} hari`;
+  if (deliveryType === 'CEPAT') return `${baseDays + 1}–${baseDays + 3} hari`;
+  return `${baseDays}–${baseDays + 1} hari`;
+}
 
 export default function BookingPage() {
   const router = useRouter();
@@ -52,10 +117,15 @@ export default function BookingPage() {
 
   const set = (key: string, val: string) => setFormData(p => ({ ...p, [key]: val }));
 
-  const estimatedCost = useMemo(() => {
+  const pricing = useMemo(() => {
     const w = Number(formData.weight);
-    return calcCost(w, formData.type, formData.deliveryType);
-  }, [formData.weight, formData.type, formData.deliveryType]);
+    return calcAdvancedCost(w, formData.type, formData.deliveryType, formData.origin, formData.destination, formData.paymentMethod);
+  }, [formData.weight, formData.type, formData.deliveryType, formData.origin, formData.destination, formData.paymentMethod]);
+
+  const routeDescription = useMemo(() => {
+    if (!formData.origin || !formData.destination || pricing.distanceKm <= 0) return null;
+    return getRouteDescription(formData.origin, formData.destination, pricing.distanceKm);
+  }, [formData.origin, formData.destination, pricing.distanceKm]);
 
   const filteredPorts = useMemo(() => {
     if (!portSearch) return PORT_DATABASE;
@@ -84,7 +154,7 @@ export default function BookingPage() {
           ...formData,
           weight: Number(formData.weight),
           volume: formData.volume ? Number(formData.volume) : null,
-          cost: estimatedCost > 0 ? estimatedCost : null,
+          cost: pricing.total > 0 ? pricing.total : null,
         })
       });
       if (res.ok) {
@@ -292,6 +362,8 @@ export default function BookingPage() {
                 {DELIVERY_OPTS.map(opt => {
                   const Icon = opt.icon;
                   const active = formData.deliveryType === opt.value;
+                  const dynamicDesc = getDeliveryTime(opt.value, pricing.distanceKm);
+                  const multiplier = DELIVERY_MULTIPLIERS[opt.value];
                   return (
                     <button key={opt.value} type="button"
                       onClick={() => set('deliveryType', opt.value)}
@@ -302,7 +374,10 @@ export default function BookingPage() {
                       }`}>
                       <Icon size={16} className={active ? 'text-primary mb-2' : 'text-zinc-600 mb-2'} />
                       <div className={`text-sm font-bold ${active ? 'text-white' : 'text-zinc-400'}`}>{opt.label}</div>
-                      <div className="text-[10px] text-zinc-600 mt-0.5 font-mono">{opt.desc}</div>
+                      <div className="text-[10px] text-zinc-600 mt-0.5 font-mono">{dynamicDesc}</div>
+                      {multiplier > 1 && (
+                        <div className="text-[9px] text-amber-500/80 font-mono mt-1">×{multiplier} tarif</div>
+                      )}
                     </button>
                   );
                 })}
@@ -338,8 +413,8 @@ export default function BookingPage() {
                 <label className={labelCls}>No. Telepon Kontak *</label>
                 <div className="relative">
                   <Phone size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-                  <input required type="tel" className={inputCls + " pl-9"} value={formData.phone}
-                    onChange={e => set('phone', e.target.value)} placeholder="+62 812 3456 7890" />
+                  <input required type="tel" pattern="[0-9+\-\s]{10,15}" minLength={10} maxLength={15} title="Masukkan nomor telepon valid (10-15 digit angka)" className={inputCls + " pl-9"} value={formData.phone}
+                    onChange={e => set('phone', e.target.value.replace(/[^0-9+\-\s]/g, ''))} placeholder="08123456789" />
                 </div>
               </div>
             </div>
@@ -388,27 +463,81 @@ export default function BookingPage() {
 
           {/* ─── SIDEBAR: Cost Preview ─── */}
           <div className="space-y-4">
-            <div className="bg-[#121217] rounded-2xl border border-white/8 p-6 sticky top-8">
+            {/* Route Visualization Stepper */}
+            {formData.origin && formData.destination && pricing.distanceKm > 0 && (
+              <div className="bg-[#121217] rounded-2xl border border-white/8 p-5">
+                <h3 className="text-sm font-mono uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
+                  <Navigation size={13} className="text-primary" /> Rute Pelayaran
+                </h3>
+                <div className="flex items-center gap-3">
+                  {/* Origin */}
+                  <div className="flex flex-col items-center text-center min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-full bg-green-500/15 border border-green-500/40 flex items-center justify-center mb-1.5 shadow-[0_0_12px_rgba(34,197,94,0.2)]">
+                      <MapPin size={14} className="text-green-400" />
+                    </div>
+                    <span className="text-[10px] text-green-400 font-mono font-bold leading-tight truncate w-full">{formData.origin}</span>
+                  </div>
+
+                  {/* Connection Line with Distance */}
+                  <div className="flex-1 flex flex-col items-center gap-1 min-w-[80px]">
+                    <div className="w-full h-px bg-gradient-to-r from-green-500/60 via-primary/40 to-red-500/60" />
+                    <div className="flex items-center gap-1">
+                      <Ship size={10} className="text-primary" />
+                      <span className="text-[10px] font-mono font-bold text-primary">{pricing.distanceKm.toLocaleString('id-ID')} km</span>
+                    </div>
+                    <div className="w-full h-px bg-gradient-to-r from-green-500/60 via-primary/40 to-red-500/60" />
+                  </div>
+
+                  {/* Destination */}
+                  <div className="flex flex-col items-center text-center min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-full bg-red-500/15 border border-red-500/40 flex items-center justify-center mb-1.5 shadow-[0_0_12px_rgba(239,68,68,0.2)]">
+                      <MapPin size={14} className="text-red-400" />
+                    </div>
+                    <span className="text-[10px] text-red-400 font-mono font-bold leading-tight truncate w-full">{formData.destination}</span>
+                  </div>
+                </div>
+
+                {/* Dynamic Route Description */}
+                {routeDescription && (
+                  <div className="mt-4 p-3 bg-primary/5 border border-primary/15 rounded-xl">
+                    <div className="flex items-start gap-2">
+                      <Info size={12} className="text-primary shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">{routeDescription}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Cost Preview */}
+            <div className="bg-[#121217] rounded-2xl border border-white/8 p-6 sticky top-20">
               <h3 className="text-sm font-mono uppercase tracking-widest text-zinc-500 mb-5 flex items-center gap-2">
                 <Calculator size={13} className="text-primary" /> Estimasi Biaya
               </h3>
 
-              {estimatedCost > 0 ? (
+              {pricing.total > 0 ? (
                 <>
                   <div className="text-center py-4">
                     <div className="text-xs text-zinc-600 font-mono mb-1 uppercase tracking-widest">Total Estimasi</div>
                     <div className="text-3xl font-bold font-mono text-white leading-tight">
-                      Rp {estimatedCost.toLocaleString('id-ID')}
+                      Rp {pricing.total.toLocaleString('id-ID')}
                     </div>
                     <div className="text-[10px] text-zinc-600 mt-2">*Harga final ditentukan oleh Admin</div>
                   </div>
 
+                  {/* Detailed Pricing Breakdown */}
                   <div className="mt-4 space-y-2 border-t border-white/5 pt-4">
                     {[
-                      { label: 'Tipe Kargo', value: formData.type },
-                      { label: 'Berat', value: formData.weight ? `${Number(formData.weight).toLocaleString('id-ID')} Kg` : '—' },
-                      { label: 'Layanan', value: DELIVERY_OPTS.find(d => d.value === formData.deliveryType)?.label ?? '—' },
-                      { label: 'Multiplier', value: `×${DELIVERY_MULTIPLIERS[formData.deliveryType] ?? 1}` },
+                      { label: `Biaya Dasar (${formData.type})`, value: `Rp ${pricing.baseCost.toLocaleString('id-ID')}` },
+                      { label: `Biaya Berat (${formData.weight || 0} Kg)`, value: `Rp ${pricing.weightCost.toLocaleString('id-ID')}` },
+                      ...(pricing.distanceKm > 0 ? [
+                        { label: `Biaya Jarak (${pricing.distanceKm.toLocaleString('id-ID')} km)`, value: `Rp ${pricing.distanceCost.toLocaleString('id-ID')}` },
+                        { label: pricing.distanceMultiplierLabel, value: `×${pricing.distanceMultiplierValue}` },
+                      ] : []),
+                      { label: `Layanan ${DELIVERY_OPTS.find(d => d.value === formData.deliveryType)?.label}`, value: `×${pricing.deliveryMultiplier}` },
+                      ...(pricing.paymentFee > 0 ? [
+                        { label: `Biaya ${PAYMENT_FEES[formData.paymentMethod]?.label}`, value: `+Rp ${pricing.paymentFee.toLocaleString('id-ID')}` },
+                      ] : []),
                     ].map(row => (
                       <div key={row.label} className="flex justify-between text-xs">
                         <span className="text-zinc-600 font-mono">{row.label}</span>
@@ -420,7 +549,7 @@ export default function BookingPage() {
               ) : (
                 <div className="py-8 text-center">
                   <Weight size={32} className="mx-auto text-zinc-800 mb-3" />
-                  <p className="text-zinc-600 text-xs font-mono">Isi berat muatan<br />untuk melihat estimasi</p>
+                  <p className="text-zinc-600 text-xs font-mono">Isi berat muatan & pilih rute<br />untuk melihat estimasi</p>
                 </div>
               )}
             </div>

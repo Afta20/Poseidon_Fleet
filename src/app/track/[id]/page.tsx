@@ -166,6 +166,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
                   vesselLat={vesselLog?.lat || null}
                   vesselLng={vesselLog?.lng || null}
                   status={shipment.status}
+                  shipmentId={shipment.id}
                 />
               </div>
             )}

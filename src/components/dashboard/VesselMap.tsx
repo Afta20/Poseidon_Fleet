@@ -26,11 +26,19 @@ const getVesselIcon = (vessel: VesselWithLatestLog) => {
   }
 
   const isLost = vessel.status === 'Signal Lost';
+  const hasSOS = vessel.latestLog?.incident?.includes('EMERGENCY') && !vessel.latestLog?.incident?.includes('[RESPONDED]');
+  
+  if (hasSOS) {
+    color = '#ef4444'; // strong red
+    glowColor = 'rgba(239, 68, 68, 0.9)';
+    outerGlow = 'rgba(239, 68, 68, 0.6)';
+  }
+
   const opacity = isLost ? 0.6 : 1;
 
   return new L.DivIcon({
     className: isLost ? 'custom-icon-lost' : 'custom-icon',
-    html: `<div style="
+    html: `<div class="${hasSOS ? 'animate-pulse' : ''}" style="
       background-color: ${color};
       width: 14px;
       height: 14px;

@@ -5,6 +5,8 @@ import { FleetList } from '@/components/dashboard/FleetList';
 import { VesselMap } from '@/components/dashboard/VesselMapWrapper';
 import { FuelChart } from '@/components/dashboard/FuelChart';
 import { MaintenanceModule, CrewLogsModule } from '@/components/dashboard/AnalyticsModules';
+import { LiveLogsFeed } from '@/components/dashboard/LiveLogsFeed';
+import { GlobalSOSAlert } from '@/components/dashboard/GlobalSOSAlert';
 import { useVesselStream } from '@/hooks/useVesselStream';
 import { CardSkeleton } from '@/components/ui/CardSkeleton';
 
@@ -47,6 +49,9 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-[#0a0a0c] text-white overflow-x-hidden selection:bg-primary/50">
       <Megamenu onMenuClick={handleMenuClick} />
       
+      {/* Global SOS Alert Banner */}
+      <GlobalSOSAlert onGoToLogs={() => setAnalyticsMode('Crew Logs')} />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Top Section: Map & Analytics */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6">
@@ -63,7 +68,11 @@ export default function DashboardPage() {
             <h2 className="text-xl font-bold mb-4 shadow-neon-text uppercase">{analyticsMode}</h2>
             {analyticsMode === 'Fuel Efficiency' && <FuelChart />}
             {analyticsMode === 'Maintenance' && <MaintenanceModule />}
-            {analyticsMode === 'Crew Logs' && <CrewLogsModule />}
+            {analyticsMode === 'Crew Logs' && (
+              <div className="h-[400px]">
+                <LiveLogsFeed onSelectVessel={setSelectedVesselId} />
+              </div>
+            )}
             
             <div className="bg-[#121217] rounded-xl p-4 border border-primary/20 glow-border">
                <h3 className="text-zinc-400 font-mono text-sm mb-2">NETWORK STATUS</h3>

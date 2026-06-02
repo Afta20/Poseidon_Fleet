@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { VesselWithLatestLog, VesselStatus } from '@/types';
 import { PORT_DATABASE } from '@/lib/ports';
 
+import { getSeaRoute, interpolateAlongPath } from '@/lib/routing';
+
 function findPortCoords(name: string): [number, number] | null {
   if (!name) return null;
   const lower = name.toLowerCase().trim();
@@ -111,14 +113,16 @@ export const useVesselStream = () => {
             const originCoords = findPortCoords(activeShipment.origin) || [1.290270, 103.851959]; // default Singapore
             const destCoords = findPortCoords(activeShipment.destination) || [-6.10, 106.88]; // default Jakarta
             
+            // Generate full path (this could be cached in a real app to avoid recalculating every interval)
+            const path = getSeaRoute(originCoords as [number, number], destCoords as [number, number]);
+
             // Advance route progress by 1.5% every 5 seconds
             let nextProgress = (vessel.progress || 0.35) + 0.015;
             if (nextProgress > 1.0) {
               nextProgress = 0.0; // Loop back for infinite loop demo
             }
 
-            const currentLat = originCoords[0] + (destCoords[0] - originCoords[0]) * nextProgress;
-            const currentLng = originCoords[1] + (destCoords[1] - originCoords[1]) * nextProgress;
+            const [currentLat, currentLng] = interpolateAlongPath(path, nextProgress);
             const speedVariance = (Math.random() - 0.5) * 1.5;
 
              return {

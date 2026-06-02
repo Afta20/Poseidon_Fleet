@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus, Ship, X } from 'lucide-react';
+import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
@@ -36,6 +37,7 @@ export const VesselCrud = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -95,7 +97,6 @@ export const VesselCrud = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Yakin ingin menghapus kapal "${name}"? Data ini akan dihapus permanen.`)) return;
     try {
       const res = await fetch(`/api/vessels/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -339,7 +340,7 @@ export const VesselCrud = () => {
                             <Pencil size={14} />
                           </button>
                           <button
-                            onClick={() => handleDelete(vessel.id, vessel.name)}
+                            onClick={() => setDeleteTarget({ id: vessel.id, name: vessel.name })}
                             className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded-lg transition-all"
                             title="Hapus"
                           >
@@ -366,6 +367,13 @@ export const VesselCrud = () => {
           )}
         </div>
       )}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id, deleteTarget.name); }}
+        title="Hapus Kapal"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Ship, MapPin, User, Weight, ArrowRight, Check, X, Anchor, Navigation, Plus, Pencil, Trash2, Banknote, Phone, Zap } from 'lucide-react';
+import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
@@ -49,6 +50,7 @@ export const BookingCrud = () => {
    const [isEditing, setIsEditing] = useState(false);
    const [formData, setFormData] = useState({ ...EMPTY_FORM });
    const [submitting, setSubmitting] = useState(false);
+   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
    const fetchData = async () => {
       setLoading(true);
@@ -145,7 +147,6 @@ export const BookingCrud = () => {
    };
 
    const handleDelete = async (id: string, title: string) => {
-      if (!confirm(`Yakin ingin menghapus pesanan "${title}"? Data ini akan dihapus permanen.`)) return;
       try {
          const res = await fetch(`/api/shipments/${id}`, { method: 'DELETE' });
          if (res.ok) {
@@ -286,8 +287,8 @@ export const BookingCrud = () => {
                      </div>
                      <div>
                         <label className={labelCls}>No Telepon *</label>
-                        <input type="text" required className={inputCls} value={formData.phone}
-                           onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="No Telepon" />
+                        <input type="tel" required pattern="[0-9+\-\s]{10,15}" minLength={10} maxLength={15} title="Masukkan nomor telepon valid (10-15 digit angka)" className={inputCls} value={formData.phone}
+                           onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') })} placeholder="08123456789" />
                      </div>
                   </div>
 
@@ -450,7 +451,7 @@ export const BookingCrud = () => {
                                  <Pencil size={13} />
                               </button>
                               <button
-                                 onClick={(e) => { e.stopPropagation(); handleDelete(s.id, s.title); }}
+                                 onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: s.id, title: s.title }); }}
                                  className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded-lg transition-all"
                                  title="Hapus"
                               >
@@ -658,6 +659,13 @@ export const BookingCrud = () => {
                itemsPerPage={ITEMS_PER_PAGE}
             />
          )}
+         <DeleteConfirmModal
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id, deleteTarget.title); }}
+            title="Hapus Pesanan Kargo"
+            itemName={deleteTarget?.title}
+         />
       </div>
    );
 }

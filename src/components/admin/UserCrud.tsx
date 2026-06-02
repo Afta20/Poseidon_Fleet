@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus, History, X, Banknote, Shield, Users } from 'lucide-react';
+import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
@@ -20,6 +21,7 @@ export const UserCrud = () => {
    const [historyUser, setHistoryUser] = useState<any | null>(null);
    const [shipments, setShipments] = useState<any[]>([]);
    const [loadingShipments, setLoadingShipments] = useState(false);
+   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
    const fetchUsers = async () => {
       setLoading(true);
@@ -59,7 +61,6 @@ export const UserCrud = () => {
    };
 
    const handleDelete = async (id: string) => {
-      if (!confirm('Yakin ingin menghapus user ini?')) return;
       const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
       if (res.ok) fetchUsers();
    };
@@ -132,6 +133,7 @@ export const UserCrud = () => {
                      <option value="CUSTOMER">Customer</option>
                      <option value="MONITORING">Monitoring Area</option>
                      <option value="ADMIN">Administrator</option>
+                     <option value="CREW">Crew (Kapal)</option>
                   </select>
                </div>
                <div className="flex space-x-2 pt-4">
@@ -221,7 +223,7 @@ export const UserCrud = () => {
                                  </button>
                               )}
                               <button onClick={() => handleEdit(user)} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-white transition-colors"><Pencil size={14} /></button>
-                              <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
+                              <button onClick={() => setDeleteTarget({ id: user.id, name: user.name })} className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
                            </td>
                         </tr>
                      ))}
@@ -308,6 +310,13 @@ export const UserCrud = () => {
                </div>
             </div>
          )}
+         <DeleteConfirmModal
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id); }}
+            title="Hapus User"
+            itemName={deleteTarget?.name}
+         />
       </div>
    );
 }

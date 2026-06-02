@@ -31,6 +31,8 @@ export default function LoginPage() {
            router.push('/admin');
         } else if (data.role === 'MONITORING') {
            router.push('/dashboard');
+        } else if (data.role === 'CREW') {
+           router.push('/crew');
         } else {
            router.push('/customer');
         }
