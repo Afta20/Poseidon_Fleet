@@ -69,6 +69,11 @@ model User {
   name      String
   role      Role       @default(CUSTOMER)
   
+  // Verification fields
+  isVerified              Boolean   @default(false)
+  verificationToken       String?
+  verificationTokenExpiry DateTime?
+  
   crew      Crew?
   
   shipments Shipment[] @relation("CustomerShipments")

@@ -92,3 +92,54 @@ export const sendBookingConfirmationEmail = async (
     console.error('Gagal mengirim email:', error);
   }
 };
+
+export const sendVerificationEmail = async (toEmail: string, userName: string, token: string) => {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+
+  const htmlTemplate = `
+    <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #6366f1; margin: 0;">POSEIDON FLEET</h1>
+        <p style="color: #666; font-size: 14px; margin-top: 5px;">Sistem Navigasi & Logistik Maritim</p>
+      </div>
+      
+      <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h2 style="color: #333; margin-top: 0;">Halo, ${userName}!</h2>
+        <p style="color: #555; line-height: 1.6;">
+          Terima kasih telah mendaftar di Poseidon Fleet. Untuk mulai menggunakan layanan kami dan memastikan keamanan akun Anda, silakan verifikasi alamat email Anda dengan mengklik tombol di bawah ini:
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verifyUrl}" style="background-color: #6366f1; color: white; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; display: inline-block;">Verifikasi Email Saya</a>
+        </div>
+        
+        <p style="color: #555; line-height: 1.6; font-size: 14px;">
+          Atau salin dan tempel tautan berikut di browser Anda:<br>
+          <a href="${verifyUrl}" style="color: #6366f1; word-break: break-all;">${verifyUrl}</a>
+        </p>
+        
+        <p style="color: #888; line-height: 1.6; font-size: 13px; margin-top: 20px;">
+          Link ini akan kedaluwarsa dalam waktu 24 jam. Jika Anda tidak mendaftar di Poseidon Fleet, abaikan email ini.
+        </p>
+        
+        <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 30px 0;" />
+        <p style="color: #888; font-size: 12px; text-align: center; margin: 0;">
+          Ini adalah email otomatis, mohon tidak membalas email ini.<br/>
+          &copy; ${new Date().getFullYear()} Poseidon Fleet. All rights reserved.
+        </p>
+      </div>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: '"Poseidon Fleet" <kelompok2bsiweb@gmail.com>',
+      to: toEmail,
+      subject: 'Verifikasi Akun Poseidon Fleet Anda',
+      html: htmlTemplate,
+    });
+    console.log(`Email verifikasi terkirim ke ${toEmail}`);
+  } catch (error) {
+    console.error('Gagal mengirim email verifikasi:', error);
+  }
+};

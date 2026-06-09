@@ -21,6 +21,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    if (!user.isVerified) {
+      return NextResponse.json({ error: 'Akun belum diverifikasi. Silakan cek email Anda.' }, { status: 403 });
+    }
+
     const token = await signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
 
     const response = NextResponse.json({ success: true, role: user.role });

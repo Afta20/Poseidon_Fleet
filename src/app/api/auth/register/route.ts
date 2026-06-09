@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
-import { signToken } from '@/lib/auth';
+import { sendVerificationEmail } from '@/lib/email';
+import crypto from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
     }
 
+    const verificationToken = crypto.randomUUID();
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     // Hash password and create user with CUSTOMER role
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await db.user.create({
@@ -29,29 +33,17 @@ export async function POST(request: Request) {
         name,
         password: hashedPassword,
         role: 'CUSTOMER', // Public registration always creates CUSTOMER
+        isVerified: false,
+        verificationToken,
+        verificationTokenExpiry
       },
       select: { id: true, email: true, name: true, role: true }
     });
 
-    // Auto-login after registration
-    const token = await signToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-    });
+    // Send verification email
+    await sendVerificationEmail(email, name, verificationToken);
 
-    const response = NextResponse.json({ success: true, role: user.role });
-    response.cookies.set({
-      name: 'session',
-      value: token,
-      httpOnly: true,
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24, // 1 day
-    });
-
-    return response;
+    return NextResponse.json({ success: true, message: "Registrasi berhasil. Silakan cek email Anda untuk memverifikasi akun." });
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
