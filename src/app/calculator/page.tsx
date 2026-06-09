@@ -1,7 +1,8 @@
 "use client"
 import React, { useState, useMemo } from 'react';
 import { Megamenu } from '@/components/layout/Megamenu';
-import { Calculator, ArrowRight, Ship, MapPin, Weight, Zap, Package, ChevronRight, TrendingUp } from 'lucide-react';
+import { Calculator, ArrowRight, Ship, MapPin, Weight, Zap, Package, ChevronRight, TrendingUp, Search, Anchor, ChevronDown, ChevronUp } from 'lucide-react';
+import { PORT_DATABASE } from '@/lib/ports';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
@@ -51,6 +52,26 @@ export default function CalculatorPage() {
   const [calculated, setCalculated] = useState(false);
 
   const set = (k: string, v: string) => { setForm(p => ({ ...p, [k]: v })); setCalculated(false); };
+
+  const [showPorts, setShowPorts] = useState(false);
+  const [portSearch, setPortSearch] = useState('');
+  const [portTarget, setPortTarget] = useState<'origin' | 'destination'>('origin');
+
+  const filteredPorts = useMemo(() => {
+    if (!portSearch) return PORT_DATABASE;
+    const q = portSearch.toLowerCase();
+    return PORT_DATABASE.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.region.toLowerCase().includes(q) ||
+      p.alias.some(a => a.includes(q))
+    );
+  }, [portSearch]);
+
+  const pickPort = (portName: string) => {
+    set(portTarget, portName);
+    setShowPorts(false);
+    setPortSearch('');
+  };
 
   const result = useMemo(() => calcCost(Number(form.weight), form.type, form.delivery), [form.weight, form.type, form.delivery]);
   const breakdown = useMemo(() => BREAKDOWN_ITEMS(Number(form.weight), form.type, form.delivery), [form.weight, form.type, form.delivery]);
@@ -113,16 +134,25 @@ export default function CalculatorPage() {
 
               {/* Route */}
               <div className="bg-[#121217] rounded-2xl border border-white/8 p-6 space-y-4">
-                <h2 className="text-xs font-mono uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                  <MapPin size={12} className="text-primary" /> Rute Pengiriman
-                </h2>
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-xs font-mono uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                    <MapPin size={12} className="text-primary" /> Rute Pengiriman
+                  </h2>
+                  <button type="button" onClick={() => setShowPorts(p => !p)}
+                    className="flex items-center gap-1.5 text-[10px] font-mono text-primary border border-primary/30 bg-primary/10 hover:bg-primary/20 px-2 py-1 rounded transition-all">
+                    <Anchor size={10} />
+                    {showPorts ? 'Sembunyikan' : 'Lihat Pelabuhan'}
+                    {showPorts ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-1.5">Asal</label>
                     <div className="relative">
                       <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500" />
                       <input required type="text" className={`${inputCls} pl-9 ${formErrors.origin ? 'border-red-500/50 bg-red-500/5' : ''}`} placeholder="Tanjung Priok, Jakarta"
-                        value={form.origin} onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); set('origin', e.target.value); }} />
+                        value={form.origin} onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); set('origin', e.target.value); }}
+                        onFocus={() => { setPortTarget('origin'); setShowPorts(true); }} />
                     </div>
                     {formErrors.origin && <p className="text-[11px] text-red-400 mt-1 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.origin}</p>}
                   </div>
@@ -131,11 +161,63 @@ export default function CalculatorPage() {
                     <div className="relative">
                       <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400" />
                       <input required type="text" className={`${inputCls} pl-9 ${formErrors.destination ? 'border-red-500/50 bg-red-500/5' : ''}`} placeholder="Tanjung Perak, Surabaya"
-                        value={form.destination} onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); set('destination', e.target.value); }} />
+                        value={form.destination} onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); set('destination', e.target.value); }}
+                        onFocus={() => { setPortTarget('destination'); setShowPorts(true); }} />
                     </div>
                     {formErrors.destination && <p className="text-[11px] text-red-400 mt-1 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.destination}</p>}
                   </div>
                 </div>
+
+                {/* Port Picker Panel */}
+                {showPorts && (
+                  <div className="border border-primary/20 bg-black/40 rounded-xl p-4 space-y-3 mt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">
+                        Pilih untuk: <span className={portTarget === 'origin' ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
+                          {portTarget === 'origin' ? '🟢 Asal' : '🔴 Tujuan'}
+                        </span>
+                      </span>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => setPortTarget('origin')}
+                          className={`text-[10px] font-mono px-2 py-1 rounded transition-all ${portTarget === 'origin' ? 'bg-green-500/20 text-green-400 border border-green-500/40' : 'bg-white/5 text-zinc-500 hover:text-zinc-300'}`}>
+                          Asal
+                        </button>
+                        <button type="button" onClick={() => setPortTarget('destination')}
+                          className={`text-[10px] font-mono px-2 py-1 rounded transition-all ${portTarget === 'destination' ? 'bg-red-500/20 text-red-400 border border-red-500/40' : 'bg-white/5 text-zinc-500 hover:text-zinc-300'}`}>
+                          Tujuan
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
+                      <input type="text" className="w-full bg-black/50 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-white text-xs placeholder:text-zinc-700 focus:outline-none focus:border-primary/40 transition-colors"
+                        placeholder="Cari nama pelabuhan, kota, atau wilayah..."
+                        value={portSearch} onChange={e => setPortSearch(e.target.value)} />
+                    </div>
+
+                    <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+                      {filteredPorts.map(port => (
+                        <button key={port.name} type="button" onClick={() => pickPort(port.name)}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-primary/10 hover:border-primary/30 border border-transparent text-left transition-all group">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Ship size={11} className="text-zinc-600 group-hover:text-primary shrink-0 transition-colors" />
+                            <div className="min-w-0">
+                              <span className="text-xs text-zinc-300 group-hover:text-white font-medium transition-colors truncate block">{port.name}</span>
+                              <span className="text-[10px] text-zinc-600 font-mono">{port.region}</span>
+                            </div>
+                          </div>
+                          <span className={`text-[10px] font-mono shrink-0 ml-2 px-1.5 py-0.5 rounded ${
+                            portTarget === 'origin' ? 'text-green-500 bg-green-500/10' : 'text-red-400 bg-red-500/10'
+                          }`}>+ {portTarget === 'origin' ? 'Asal' : 'Tujuan'}</span>
+                        </button>
+                      ))}
+                      {filteredPorts.length === 0 && (
+                        <p className="text-center text-zinc-600 text-[10px] py-4 font-mono">Pelabuhan tidak ditemukan.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Cargo Type */}

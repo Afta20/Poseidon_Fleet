@@ -138,9 +138,9 @@ export default function LoginPage() {
               </div>
               <span className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors">Remember me</span>
             </label>
-            <a href="#" className="text-xs text-primary/80 hover:text-primary transition-colors">
+            <Link href="/forgot-password" className="text-xs text-primary/80 hover:text-primary transition-colors">
               Forgot Password?
-            </a>
+            </Link>
           </div>
 
           {/* Submit */}
