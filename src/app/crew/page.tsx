@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Ship, AlertTriangle, CloudRain, ShieldAlert, CheckCircle2, ArrowRight, Loader2, Navigation, Package, MapPin, Power, Crosshair, ShieldCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { useRouter } from 'next/navigation';
 
@@ -91,12 +92,13 @@ export default function CrewDashboard() {
         })
       });
       if (res.ok) {
+        toast.success('Status muatan berhasil diupdate');
         fetchDashboard();
       } else {
-        alert('Gagal mengupdate muatan');
+        toast.error('Gagal mengupdate muatan');
       }
     } catch (e) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     }
     setUpdateLoading(null);
   };
@@ -117,9 +119,11 @@ export default function CrewDashboard() {
       if (res.ok) {
         setSosSuccess(true);
         setTimeout(() => setSosSuccess(false), 4000);
+      } else {
+        toast.error('Gagal mengirim SOS');
       }
     } catch (e) {
-      alert('Gagal mengirim SOS');
+      toast.error('Gagal mengirim SOS');
     }
     setSosLoading(false);
   };
@@ -138,10 +142,12 @@ export default function CrewDashboard() {
       });
       if (res.ok) {
         setNotesInput('');
-        alert('Logbook berhasil dicatat!');
+        toast.success('Logbook berhasil dicatat!');
+      } else {
+        toast.error('Gagal mencatat log');
       }
     } catch (e) {
-      alert('Gagal mencatat log');
+      toast.error('Gagal mencatat log');
     }
     setLogLoading(false);
   };

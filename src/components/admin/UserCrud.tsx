@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus, History, X, Banknote, Shield, Users } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
@@ -22,6 +23,7 @@ export const UserCrud = () => {
    const [shipments, setShipments] = useState<any[]>([]);
    const [loadingShipments, setLoadingShipments] = useState(false);
    const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
    const fetchUsers = async () => {
       setLoading(true);
@@ -37,6 +39,18 @@ export const UserCrud = () => {
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+
+      const errors: Record<string, string> = {};
+      if (!formData.name.trim()) errors.name = "Nama lengkap wajib diisi";
+      if (!formData.email.trim()) errors.email = "Email wajib diisi";
+      if (!isEditing && !formData.password) errors.password = "Password wajib diisi";
+      if (!formData.role) errors.role = "Role wajib dipilih";
+
+      if (Object.keys(errors).length > 0) {
+         setFormErrors(errors);
+         return;
+      }
+
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing ? `/api/users/${formData.id}` : '/api/users';
       
@@ -46,23 +60,31 @@ export const UserCrud = () => {
          body: JSON.stringify(formData)
       });
       if (res.ok) {
+         toast.success(isEditing ? 'User berhasil diperbarui' : 'User baru berhasil didaftarkan');
          setFormData({ email: '', name: '', password: '', role: 'CUSTOMER', id: '' });
          setIsEditing(false);
          fetchUsers();
       } else {
          const err = await res.json();
-         alert(err.error || 'Gagal menyimpan user');
+         toast.error(err.error || 'Gagal menyimpan user');
       }
    };
 
    const handleEdit = (user: any) => {
       setFormData({ ...user, password: '', id: user.id });
       setIsEditing(true);
+      setFormErrors({});
    };
 
    const handleDelete = async (id: string) => {
       const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchUsers();
+      if (res.ok) {
+         toast.success('User berhasil dihapus');
+         fetchUsers();
+      } else {
+         const err = await res.json();
+         toast.error(err.error || 'Gagal menghapus user');
+      }
    };
 
    const handleViewHistory = async (user: any) => {
@@ -114,27 +136,31 @@ export const UserCrud = () => {
          {/* Form */}
          <div className="bg-[#1a1a21] p-5 rounded-xl border border-white/5 h-fit glow-border">
             <h3 className="font-bold text-white mb-6 uppercase tracking-wider font-mono text-sm">{isEditing ? 'Edit Existing User' : 'Register New User'}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
                <div>
                   <label className="text-xs text-zinc-400 font-mono">Full Name</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary" required />
+                  <input type="text" value={formData.name} onChange={e => { setFormErrors(prev => ({...prev, name: ''})); setFormData({...formData, name: e.target.value}); }} className={`w-full bg-black/50 border rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary transition-colors ${formErrors.name ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`} required />
+                  {formErrors.name && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.name}</p>}
                </div>
                <div>
                   <label className="text-xs text-zinc-400 font-mono">Email Address</label>
-                  <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary" required />
+                  <input type="email" value={formData.email} onChange={e => { setFormErrors(prev => ({...prev, email: ''})); setFormData({...formData, email: e.target.value}); }} className={`w-full bg-black/50 border rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary transition-colors ${formErrors.email ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`} required />
+                  {formErrors.email && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.email}</p>}
                </div>
                <div>
                   <label className="text-xs text-zinc-400 font-mono">Password {isEditing && <span className="text-zinc-600">(leave blank to keep)</span>}</label>
-                  <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary" required={!isEditing} />
+                  <input type="password" value={formData.password} onChange={e => { setFormErrors(prev => ({...prev, password: ''})); setFormData({...formData, password: e.target.value}); }} className={`w-full bg-black/50 border rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary transition-colors ${formErrors.password ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`} required={!isEditing} />
+                  {formErrors.password && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.password}</p>}
                </div>
                <div>
                   <label className="text-xs text-zinc-400 font-mono">System Role</label>
-                  <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary">
+                  <select value={formData.role} onChange={e => { setFormErrors(prev => ({...prev, role: ''})); setFormData({...formData, role: e.target.value}); }} className={`w-full bg-black/50 border rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary transition-colors ${formErrors.role ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}>
                      <option value="CUSTOMER">Customer</option>
                      <option value="MONITORING">Monitoring Area</option>
                      <option value="ADMIN">Administrator</option>
                      <option value="CREW">Crew (Kapal)</option>
                   </select>
+                  {formErrors.role && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.role}</p>}
                </div>
                <div className="flex space-x-2 pt-4">
                   <button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded text-sm font-bold flex justify-center items-center tracking-widest uppercase">

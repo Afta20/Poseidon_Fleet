@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
@@ -18,6 +19,7 @@ export const CrewCrud = () => {
    const [searchQuery, setSearchQuery] = useState('');
    const [currentPage, setCurrentPage] = useState(1);
    const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
    const fetchData = async () => {
       setLoading(true);
@@ -41,6 +43,16 @@ export const CrewCrud = () => {
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+
+      const errors: Record<string, string> = {};
+      if (!formData.name.trim()) errors.name = "Nama crew wajib diisi";
+      if (!formData.position) errors.position = "Posisi/Role wajib dipilih";
+
+      if (Object.keys(errors).length > 0) {
+         setFormErrors(errors);
+         return;
+      }
+
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing ? `/api/crew/${formData.id}` : '/api/crew';
       const res = await fetch(url, {
@@ -49,23 +61,30 @@ export const CrewCrud = () => {
          body: JSON.stringify(formData)
       });
       if (res.ok) {
+         toast.success(isEditing ? 'Data crew berhasil diperbarui' : 'Crew baru berhasil ditugaskan');
          setFormData({ name: '', position: 'Captain', vesselId: '', userId: '', id: '' });
          setIsEditing(false);
          fetchData();
       } else {
          const err = await res.json();
-         alert(err.error || 'Gagal menyimpan crew');
+         toast.error(err.error || 'Gagal menyimpan crew');
       }
    };
 
    const handleEdit = (crew: any) => {
       setFormData({ name: crew.name, position: crew.position, vesselId: crew.vesselId || '', userId: crew.userId || '', id: crew.id });
       setIsEditing(true);
+      setFormErrors({});
    };
 
    const handleDelete = async (id: string) => {
       const res = await fetch(`/api/crew/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchData();
+      if (res.ok) {
+         toast.success('Crew berhasil dihapus');
+         fetchData();
+      } else {
+         toast.error('Gagal menghapus crew');
+      }
    };
 
    const filteredCrews = crews.filter(crew => {
@@ -87,10 +106,11 @@ export const CrewCrud = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          <div className="bg-[#1a1a21] p-5 rounded-xl border border-white/5 h-fit glow-border">
             <h3 className="font-bold text-white mb-6 uppercase tracking-wider font-mono text-sm">{isEditing ? 'Edit Crew Member' : 'Assign New Crew'}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
                <div>
                   <label className="text-xs text-zinc-400 font-mono">Crew Name</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary" required />
+                  <input type="text" value={formData.name} onChange={e => { setFormErrors(prev => ({...prev, name: ''})); setFormData({...formData, name: e.target.value}); }} className={`w-full bg-black/50 border rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary transition-colors ${formErrors.name ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`} required />
+                  {formErrors.name && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.name}</p>}
                </div>
                {!isEditing && availableUsers.length > 0 && (
                   <div>
@@ -109,12 +129,13 @@ export const CrewCrud = () => {
                )}
                <div>
                   <label className="text-xs text-zinc-400 font-mono">Position / Role</label>
-                  <select value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary">
+                  <select value={formData.position} onChange={e => { setFormErrors(prev => ({...prev, position: ''})); setFormData({...formData, position: e.target.value}); }} className={`w-full bg-black/50 border rounded py-2 px-3 text-white text-sm focus:outline-none focus:border-primary transition-colors ${formErrors.position ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}>
                      <option value="Captain">Captain</option>
                      <option value="First Officer">First Officer</option>
                      <option value="Chief Engineer">Chief Engineer</option>
                      <option value="Deckhand">Deckhand</option>
                   </select>
+                  {formErrors.position && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.position}</p>}
                </div>
                <div>
                   <label className="text-xs text-zinc-400 font-mono">Assigned Vessel</label>

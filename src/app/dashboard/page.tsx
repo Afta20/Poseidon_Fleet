@@ -9,6 +9,7 @@ import { LiveLogsFeed } from '@/components/dashboard/LiveLogsFeed';
 import { GlobalSOSAlert } from '@/components/dashboard/GlobalSOSAlert';
 import { useVesselStream } from '@/hooks/useVesselStream';
 import { CardSkeleton } from '@/components/ui/CardSkeleton';
+import toast from 'react-hot-toast';
 
 function MapSkeleton() {
   return (
@@ -38,7 +39,7 @@ export default function DashboardPage() {
       setMapMode(action);
     } else if (key === 'analytics') {
       if (action !== 'Fuel Efficiency' && action !== 'Maintenance' && action !== 'Crew Logs') {
-         alert(`Fitur "${action}" masih tahap mockup!`);
+         toast.error(`Fitur "${action}" masih tahap mockup!`);
       } else {
          setAnalyticsMode(action);
       }

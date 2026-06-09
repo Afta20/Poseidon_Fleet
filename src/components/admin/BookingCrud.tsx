@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Ship, MapPin, User, Weight, ArrowRight, Check, X, Anchor, Navigation, Plus, Pencil, Trash2, Banknote, Phone, Zap, AlertTriangle, MessageCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
@@ -52,6 +53,7 @@ export const BookingCrud = () => {
    const [formData, setFormData] = useState({ ...EMPTY_FORM });
    const [submitting, setSubmitting] = useState(false);
    const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
    const fetchData = async () => {
       setLoading(true);
@@ -102,6 +104,22 @@ export const BookingCrud = () => {
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+
+      const errors: Record<string, string> = {};
+      if (!formData.title.trim()) errors.title = "Nama / Judul barang wajib diisi";
+      if (!formData.senderName.trim()) errors.senderName = "Nama pengirim wajib diisi";
+      if (!formData.receiverName.trim()) errors.receiverName = "Nama penerima wajib diisi";
+      if (!formData.phone.trim()) errors.phone = "No. Telepon wajib diisi";
+      if (!formData.origin.trim()) errors.origin = "Pelabuhan asal wajib diisi";
+      if (!formData.destination.trim()) errors.destination = "Pelabuhan tujuan wajib diisi";
+      if (!formData.weight) errors.weight = "Berat muatan wajib diisi";
+      if (!formData.customerId) errors.customerId = "Customer wajib dipilih";
+
+      if (Object.keys(errors).length > 0) {
+         setFormErrors(errors);
+         return;
+      }
+
       setSubmitting(true);
       try {
          const method = isEditing ? 'PUT' : 'POST';
@@ -118,17 +136,18 @@ export const BookingCrud = () => {
             body: JSON.stringify(payload)
          });
          if (res.ok) {
+            toast.success(isEditing ? 'Pesanan berhasil diperbarui' : 'Pesanan baru berhasil dibuat');
             setFormData({ ...EMPTY_FORM });
             setIsEditing(false);
             setShowForm(false);
             fetchData();
          } else {
             const err = await res.json();
-            alert(err.error || 'Gagal menyimpan data pesanan');
+            toast.error(err.error || 'Gagal menyimpan data pesanan');
          }
       } catch (e) {
          console.error(e);
-         alert('Terjadi kesalahan');
+         toast.error('Terjadi kesalahan');
       } finally {
          setSubmitting(false);
       }
@@ -156,19 +175,21 @@ export const BookingCrud = () => {
       });
       setIsEditing(true);
       setShowForm(true);
+      setFormErrors({});
    };
 
    const handleDelete = async (id: string, title: string) => {
       try {
          const res = await fetch(`/api/shipments/${id}`, { method: 'DELETE' });
          if (res.ok) {
+            toast.success(`Pesanan "${title}" berhasil dihapus`);
             fetchData();
          } else {
             const err = await res.json();
-            alert(err.error || 'Gagal menghapus pesanan');
+            toast.error(err.error || 'Gagal menghapus pesanan');
          }
       } catch (e) {
-         alert('Terjadi kesalahan');
+         toast.error('Terjadi kesalahan');
       }
    };
 
@@ -295,22 +316,24 @@ export const BookingCrud = () => {
                      <X size={16} className="text-zinc-400" />
                   </button>
                </div>
-               <form onSubmit={handleSubmit} className="space-y-5">
+               <form onSubmit={handleSubmit} noValidate className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                      <div>
                         <label className={labelCls}>Nama / Jenis Barang *</label>
-                        <input type="text" required className={inputCls} value={formData.title}
-                           onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Misal: Mesin Pabrik" />
+                        <input type="text" required className={`${inputCls} ${formErrors.title ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.title}
+                           onChange={e => { setFormErrors(prev => ({...prev, title: ''})); setFormData({ ...formData, title: e.target.value }); }} placeholder="Misal: Mesin Pabrik" />
+                        {formErrors.title && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.title}</p>}
                      </div>
                      <div>
                         <label className={labelCls}>Customer / Akun Pemesan *</label>
-                        <select required className={inputCls} value={formData.customerId}
-                           onChange={e => setFormData({ ...formData, customerId: e.target.value })}>
+                        <select required className={`${inputCls} ${formErrors.customerId ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.customerId}
+                           onChange={e => { setFormErrors(prev => ({...prev, customerId: ''})); setFormData({ ...formData, customerId: e.target.value }); }}>
                            <option value="">Pilih Customer...</option>
                            {customers.map(c => (
                               <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
                            ))}
                         </select>
+                        {formErrors.customerId && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.customerId}</p>}
                      </div>
                      <div>
                         <label className={labelCls}>Status Pengiriman *</label>
@@ -326,39 +349,45 @@ export const BookingCrud = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                      <div>
                         <label className={labelCls}>Nama Pengirim *</label>
-                        <input type="text" required className={inputCls} value={formData.senderName}
-                           onChange={e => setFormData({ ...formData, senderName: e.target.value })} placeholder="Nama Pengirim" />
+                        <input type="text" required className={`${inputCls} ${formErrors.senderName ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.senderName}
+                           onChange={e => { setFormErrors(prev => ({...prev, senderName: ''})); setFormData({ ...formData, senderName: e.target.value }); }} placeholder="Nama Pengirim" />
+                        {formErrors.senderName && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.senderName}</p>}
                      </div>
                      <div>
                         <label className={labelCls}>Nama Penerima *</label>
-                        <input type="text" required className={inputCls} value={formData.receiverName}
-                           onChange={e => setFormData({ ...formData, receiverName: e.target.value })} placeholder="Nama Penerima" />
+                        <input type="text" required className={`${inputCls} ${formErrors.receiverName ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.receiverName}
+                           onChange={e => { setFormErrors(prev => ({...prev, receiverName: ''})); setFormData({ ...formData, receiverName: e.target.value }); }} placeholder="Nama Penerima" />
+                        {formErrors.receiverName && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.receiverName}</p>}
                      </div>
                      <div>
                         <label className={labelCls}>No Telepon *</label>
-                        <input type="tel" required pattern="[0-9+\-\s]{10,15}" minLength={10} maxLength={15} title="Masukkan nomor telepon valid (10-15 digit angka)" className={inputCls} value={formData.phone}
-                           onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') })} placeholder="08123456789" />
+                        <input type="tel" required pattern="[0-9+\-\s]{10,15}" minLength={10} maxLength={15} title="Masukkan nomor telepon valid (10-15 digit angka)" className={`${inputCls} ${formErrors.phone ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.phone}
+                           onChange={e => { setFormErrors(prev => ({...prev, phone: ''})); setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') }); }} placeholder="08123456789" />
+                        {formErrors.phone && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.phone}</p>}
                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div>
                         <label className={labelCls}>Pelabuhan Asal *</label>
-                        <input type="text" required className={inputCls} value={formData.origin}
-                           onChange={e => setFormData({ ...formData, origin: e.target.value })} placeholder="Tanjung Priok, Jakarta" />
+                        <input type="text" required className={`${inputCls} ${formErrors.origin ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.origin}
+                           onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); setFormData({ ...formData, origin: e.target.value }); }} placeholder="Tanjung Priok, Jakarta" />
+                        {formErrors.origin && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.origin}</p>}
                      </div>
                      <div>
                         <label className={labelCls}>Pelabuhan Tujuan *</label>
-                        <input type="text" required className={inputCls} value={formData.destination}
-                           onChange={e => setFormData({ ...formData, destination: e.target.value })} placeholder="Tanjung Perak, Surabaya" />
+                        <input type="text" required className={`${inputCls} ${formErrors.destination ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.destination}
+                           onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); setFormData({ ...formData, destination: e.target.value }); }} placeholder="Tanjung Perak, Surabaya" />
+                        {formErrors.destination && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.destination}</p>}
                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                      <div>
                         <label className={labelCls}>Berat Barang (Kg) *</label>
-                        <input type="number" required min="1" className={inputCls} value={formData.weight}
-                           onChange={e => setFormData({ ...formData, weight: e.target.value })} placeholder="500" />
+                        <input type="number" required min="1" className={`${inputCls} ${formErrors.weight ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.weight}
+                           onChange={e => { setFormErrors(prev => ({...prev, weight: ''})); setFormData({ ...formData, weight: e.target.value }); }} placeholder="500" />
+                        {formErrors.weight && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.weight}</p>}
                      </div>
                      <div>
                         <label className={labelCls}>Volume (m³)</label>

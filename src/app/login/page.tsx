@@ -10,11 +10,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const errors: Record<string, string> = {};
+    if (!email.trim()) errors.email = "Username/Email wajib diisi";
+    if (!password) errors.password = "Password wajib diisi";
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -76,7 +87,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} noValidate className="space-y-6">
           {/* Username */}
           <div>
             <label className="text-xs text-zinc-400 tracking-wider mb-2 block font-sans">Username</label>
@@ -85,12 +96,13 @@ export default function LoginPage() {
               <input 
                 type="text" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, email: ''})); setEmail(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.email ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="ftghjk@yhbjnk"
                 required
               />
             </div>
+            {formErrors.email && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.email}</p>}
           </div>
 
           {/* Password */}
@@ -101,12 +113,13 @@ export default function LoginPage() {
               <input 
                 type="password" 
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, password: ''})); setPassword(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.password ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="••••••••"
                 required
               />
             </div>
+            {formErrors.password && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.password}</p>}
           </div>
 
           {/* Options */}

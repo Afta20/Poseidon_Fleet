@@ -47,6 +47,7 @@ const inputCls = "w-full bg-[#0d0d12] border border-white/10 rounded-xl py-3 px-
 
 export default function CalculatorPage() {
   const [form, setForm] = useState({ origin: '', destination: '', type: 'LCL', delivery: 'BIASA', weight: '', volume: '' });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [calculated, setCalculated] = useState(false);
 
   const set = (k: string, v: string) => { setForm(p => ({ ...p, [k]: v })); setCalculated(false); };
@@ -56,7 +57,18 @@ export default function CalculatorPage() {
 
   const handleCalc = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.origin || !form.destination || !form.weight) return;
+    
+    const errors: Record<string, string> = {};
+    if (!form.origin.trim()) errors.origin = "Pelabuhan asal wajib diisi";
+    if (!form.destination.trim()) errors.destination = "Pelabuhan tujuan wajib diisi";
+    if (!form.weight) errors.weight = "Berat muatan wajib diisi";
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setCalculated(false);
+      return;
+    }
+
     setCalculated(true);
   };
 
@@ -97,7 +109,7 @@ export default function CalculatorPage() {
 
           {/* ── Form (3/5) ── */}
           <div className="lg:col-span-3">
-            <form onSubmit={handleCalc} className="space-y-5">
+            <form onSubmit={handleCalc} noValidate className="space-y-5">
 
               {/* Route */}
               <div className="bg-[#121217] rounded-2xl border border-white/8 p-6 space-y-4">
@@ -109,17 +121,19 @@ export default function CalculatorPage() {
                     <label className="block text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-1.5">Asal</label>
                     <div className="relative">
                       <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500" />
-                      <input required type="text" className={inputCls + " pl-9"} placeholder="Tanjung Priok, Jakarta"
-                        value={form.origin} onChange={e => set('origin', e.target.value)} />
+                      <input required type="text" className={`${inputCls} pl-9 ${formErrors.origin ? 'border-red-500/50 bg-red-500/5' : ''}`} placeholder="Tanjung Priok, Jakarta"
+                        value={form.origin} onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); set('origin', e.target.value); }} />
                     </div>
+                    {formErrors.origin && <p className="text-[11px] text-red-400 mt-1 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.origin}</p>}
                   </div>
                   <div>
                     <label className="block text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-1.5">Tujuan</label>
                     <div className="relative">
                       <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400" />
-                      <input required type="text" className={inputCls + " pl-9"} placeholder="Tanjung Perak, Surabaya"
-                        value={form.destination} onChange={e => set('destination', e.target.value)} />
+                      <input required type="text" className={`${inputCls} pl-9 ${formErrors.destination ? 'border-red-500/50 bg-red-500/5' : ''}`} placeholder="Tanjung Perak, Surabaya"
+                        value={form.destination} onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); set('destination', e.target.value); }} />
                     </div>
+                    {formErrors.destination && <p className="text-[11px] text-red-400 mt-1 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.destination}</p>}
                   </div>
                 </div>
               </div>
@@ -154,10 +168,11 @@ export default function CalculatorPage() {
                   <div>
                     <label className="block text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-1.5">Berat (Kg) *</label>
                     <div className="relative">
-                      <input required type="number" min="1" className={inputCls + " pr-10"}
-                        placeholder="5000" value={form.weight} onChange={e => set('weight', e.target.value)} />
+                      <input required type="number" min="1" className={`${inputCls} pr-10 ${formErrors.weight ? 'border-red-500/50 bg-red-500/5' : ''}`}
+                        placeholder="5000" value={form.weight} onChange={e => { setFormErrors(prev => ({...prev, weight: ''})); set('weight', e.target.value); }} />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-700 font-mono">Kg</span>
                     </div>
+                    {formErrors.weight && <p className="text-[11px] text-red-400 mt-1 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.weight}</p>}
                   </div>
                   <div>
                     <label className="block text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-1.5">Volume (m³)</label>

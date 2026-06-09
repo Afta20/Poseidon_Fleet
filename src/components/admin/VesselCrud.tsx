@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, Plus, Ship, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Pagination } from '@/components/ui/Pagination';
@@ -38,6 +39,7 @@ export const VesselCrud = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
     setLoading(true);
@@ -56,6 +58,17 @@ export const VesselCrud = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const errors: Record<string, string> = {};
+    if (!formData.name.trim()) errors.name = "Nama Kapal wajib diisi";
+    if (!formData.type) errors.type = "Jenis Kapal wajib dipilih";
+    if (!formData.status) errors.status = "Status Kapal wajib dipilih";
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const method = isEditing ? 'PUT' : 'POST';
@@ -66,17 +79,18 @@ export const VesselCrud = () => {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
+        toast.success(isEditing ? 'Data kapal diperbarui!' : 'Kapal baru berhasil ditambahkan!');
         setFormData({ ...EMPTY_FORM });
         setIsEditing(false);
         setShowForm(false);
         fetchData();
       } else {
         const err = await res.json();
-        alert(err.error || 'Gagal menyimpan data kapal');
+        toast.error(err.error || 'Gagal menyimpan data kapal');
       }
     } catch (e) {
       console.error(e);
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     } finally {
       setSubmitting(false);
     }
@@ -100,13 +114,14 @@ export const VesselCrud = () => {
     try {
       const res = await fetch(`/api/vessels/${id}`, { method: 'DELETE' });
       if (res.ok) {
+        toast.success(`Kapal "${name}" berhasil dihapus`);
         fetchData();
       } else {
         const err = await res.json();
-        alert(err.error || 'Gagal menghapus kapal');
+        toast.error(err.error || 'Gagal menghapus kapal');
       }
     } catch (e) {
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     }
   };
 
@@ -175,39 +190,44 @@ export const VesselCrud = () => {
               <X size={16} className="text-zinc-400" />
             </button>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className={labelCls}>Nama Kapal *</label>
               <input
                 type="text"
                 required
-                className={inputCls}
+                className={`${inputCls} ${formErrors.name ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => { setFormErrors(prev => ({...prev, name: ''})); setFormData({ ...formData, name: e.target.value }); }}
                 placeholder="Misal: Poseidon Alpha"
               />
+              {formErrors.name && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.name}</p>}
             </div>
             <div>
               <label className={labelCls}>Jenis Kendaraan *</label>
               <select
                 required
-                className={inputCls}
+                className={`${inputCls} ${formErrors.type ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.type}
-                onChange={e => setFormData({ ...formData, type: e.target.value })}
+                onChange={e => { setFormErrors(prev => ({...prev, type: ''})); setFormData({ ...formData, type: e.target.value }); }}
               >
+                <option value="">Pilih Jenis</option>
                 {VESSEL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
+              {formErrors.type && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.type}</p>}
             </div>
             <div>
               <label className={labelCls}>Status Kendaraan *</label>
               <select
                 required
-                className={inputCls}
+                className={`${inputCls} ${formErrors.status ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.status}
-                onChange={e => setFormData({ ...formData, status: e.target.value })}
+                onChange={e => { setFormErrors(prev => ({...prev, status: ''})); setFormData({ ...formData, status: e.target.value }); }}
               >
+                <option value="">Pilih Status</option>
                 {VESSEL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
+              {formErrors.status && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.status}</p>}
             </div>
             <div>
               <label className={labelCls}>Plat Nomor / Kode Kendaraan</label>

@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { ArrowLeft, Send, Package, MapPin, User, Phone, Weight, Zap, Ship, Calculator, Anchor, Search, ChevronDown, ChevronUp, Banknote, CreditCard, Wallet, Navigation, Info, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PORT_DATABASE } from '@/lib/ports';
@@ -185,11 +186,11 @@ export default function BookingPage() {
         }
         router.refresh();
       } else {
-        alert('Gagal membuat pesanan pengiriman.');
+        toast.error('Gagal membuat pesanan pengiriman.');
       }
     } catch (e) {
       console.error(e);
-      alert('Terjadi kesalahan.');
+      toast.error('Terjadi kesalahan.');
     } finally {
       setLoading(false);
     }

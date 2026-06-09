@@ -4,6 +4,7 @@ import { AlertCircle, WifiOff, Ship, Battery, Navigation, Clock } from 'lucide-r
 import { motion } from 'framer-motion';
 import { useSession } from '@/hooks/useSession';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Package, Pencil, Check, X as XIcon } from 'lucide-react';
 import { Pagination } from '@/components/ui/Pagination';
 
@@ -40,10 +41,11 @@ export const FleetList: React.FC<{
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payload: tempPayload })
       });
+      toast.success('Data muatan berhasil disimpan');
       setEditingId(null);
       if (onRefetch) onRefetch();
     } catch {
-      alert('Failed saving payload');
+      toast.error('Gagal menyimpan muatan');
     }
   };
 

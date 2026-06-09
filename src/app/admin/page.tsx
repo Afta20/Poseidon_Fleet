@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSession } from '@/hooks/useSession';
 import { Megamenu } from '@/components/layout/Megamenu';
 import { ShieldAlert, Users, Anchor, BrainCircuit, Ship, Package } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { UserCrud } from '@/components/admin/UserCrud';
 import { CrewCrud } from '@/components/admin/CrewCrud';
@@ -41,11 +42,12 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         setAiReport(data.report);
+        toast.success("Report generated successfully");
       } else {
-        alert(data.error);
+        toast.error(data.error || "Gagal meng-generate report");
       }
     } catch (e) {
-      alert("Error generating report");
+      toast.error("Error generating report");
     }
     setReportLoading(false);
   };

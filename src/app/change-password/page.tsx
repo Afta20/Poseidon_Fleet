@@ -10,6 +10,7 @@ export default function ChangePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,13 +18,16 @@ export default function ChangePasswordPage() {
     setError('');
     setSuccess(false);
 
-    if (newPassword !== confirmPassword) {
-      setError('Password baru dan konfirmasi tidak cocok');
-      return;
-    }
+    const errors: Record<string, string> = {};
+    if (!currentPassword) errors.currentPassword = "Password saat ini wajib diisi";
+    if (!newPassword) errors.newPassword = "Password baru wajib diisi";
+    else if (newPassword.length < 6) errors.newPassword = "Password baru minimal 6 karakter";
+    
+    if (!confirmPassword) errors.confirmPassword = "Konfirmasi password wajib diisi";
+    else if (newPassword !== confirmPassword) errors.confirmPassword = "Password baru dan konfirmasi tidak cocok";
 
-    if (newPassword.length < 6) {
-      setError('Password baru minimal 6 karakter');
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
@@ -88,7 +92,7 @@ export default function ChangePasswordPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           <div>
             <label className="text-xs text-zinc-400 tracking-wider mb-2 block font-sans">Password Saat Ini</label>
             <div className="relative">
@@ -96,12 +100,13 @@ export default function ChangePasswordPage() {
               <input 
                 type="password" 
                 value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, currentPassword: ''})); setCurrentPassword(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.currentPassword ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="Masukkan password saat ini"
                 required
               />
             </div>
+            {formErrors.currentPassword && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.currentPassword}</p>}
           </div>
 
           <div>
@@ -111,13 +116,13 @@ export default function ChangePasswordPage() {
               <input 
                 type="password" 
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, newPassword: ''})); setNewPassword(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.newPassword ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="Minimal 6 karakter"
                 required
-                minLength={6}
               />
             </div>
+            {formErrors.newPassword && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.newPassword}</p>}
           </div>
 
           <div>
@@ -127,13 +132,13 @@ export default function ChangePasswordPage() {
               <input 
                 type="password" 
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, confirmPassword: ''})); setConfirmPassword(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.confirmPassword ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="Ulangi password baru"
                 required
-                minLength={6}
               />
             </div>
+            {formErrors.confirmPassword && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.confirmPassword}</p>}
           </div>
 
           <button 

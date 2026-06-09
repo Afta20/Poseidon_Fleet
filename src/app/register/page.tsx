@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -18,13 +19,17 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
-      setError('Password dan konfirmasi password tidak cocok');
-      return;
-    }
+    const errors: Record<string, string> = {};
+    if (!name.trim()) errors.name = "Nama lengkap wajib diisi";
+    if (!email.trim()) errors.email = "Email wajib diisi";
+    if (!password) errors.password = "Password wajib diisi";
+    else if (password.length < 6) errors.password = "Password minimal 6 karakter";
+    
+    if (!confirmPassword) errors.confirmPassword = "Konfirmasi password wajib diisi";
+    else if (password !== confirmPassword) errors.confirmPassword = "Password dan konfirmasi tidak cocok";
 
-    if (password.length < 6) {
-      setError('Password minimal 6 karakter');
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
@@ -82,7 +87,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form onSubmit={handleRegister} className="space-y-5">
+        <form onSubmit={handleRegister} noValidate className="space-y-5">
           {/* Name */}
           <div>
             <label className="text-xs text-zinc-400 tracking-wider mb-2 block font-sans">Nama Lengkap</label>
@@ -91,12 +96,13 @@ export default function RegisterPage() {
               <input 
                 type="text" 
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, name: ''})); setName(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.name ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="Masukkan nama lengkap"
                 required
               />
             </div>
+            {formErrors.name && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.name}</p>}
           </div>
 
           {/* Email */}
@@ -107,12 +113,13 @@ export default function RegisterPage() {
               <input 
                 type="email" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, email: ''})); setEmail(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.email ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="contoh@email.com"
                 required
               />
             </div>
+            {formErrors.email && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.email}</p>}
           </div>
 
           {/* Password */}
@@ -123,13 +130,13 @@ export default function RegisterPage() {
               <input 
                 type="password" 
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, password: ''})); setPassword(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.password ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="Minimal 6 karakter"
                 required
-                minLength={6}
               />
             </div>
+            {formErrors.password && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.password}</p>}
           </div>
 
           {/* Confirm Password */}
@@ -140,13 +147,13 @@ export default function RegisterPage() {
               <input 
                 type="password" 
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-[#1a1a21] border border-white/5 rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                onChange={(e) => { setFormErrors(prev => ({...prev, confirmPassword: ''})); setConfirmPassword(e.target.value); }}
+                className={`w-full bg-[#1a1a21] border rounded-lg py-3 pl-10 pr-4 text-zinc-300 text-sm focus:outline-none focus:border-primary/50 transition-colors ${formErrors.confirmPassword ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}`}
                 placeholder="Ulangi password"
                 required
-                minLength={6}
               />
             </div>
+            {formErrors.confirmPassword && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.confirmPassword}</p>}
           </div>
 
           {/* Info */}

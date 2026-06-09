@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -30,6 +31,31 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground text-lg shadow-neon-text" suppressHydrationWarning>
         {children}
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: '#0d0d12',
+              color: '#fff',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              fontFamily: 'var(--font-inter)',
+              fontSize: '14px',
+            },
+            success: {
+              iconTheme: {
+                primary: '#22c55e',
+                secondary: '#000',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );
