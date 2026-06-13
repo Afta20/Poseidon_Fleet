@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Ship, Map as MapIcon, BarChart3, ChevronDown, Anchor, Compass, Navigation, Calculator, Package } from 'lucide-react';
+import { Ship, Map as MapIcon, BarChart3, ChevronDown, Anchor, Compass, Navigation, Calculator, Package, Menu, X as XIcon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -49,6 +49,8 @@ interface MegamenuProps {
 
 export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSubmenu, setMobileSubmenu] = useState<string | null>(null);
   const { session } = useSession();
   const pathname = usePathname();
 
@@ -114,6 +116,15 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
               POSEIDON<span className="text-primary font-mono ml-1">FLEET</span>
             </span>
           </div>
+
+          {/* Hamburger Button — Mobile Only */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <XIcon size={24} /> : <Menu size={24} />}
+          </button>
 
           <div className="hidden md:flex items-center h-full space-x-1">
             {dynamicMenuItems.map((item) => {
@@ -220,6 +231,108 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Panel */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="md:hidden overflow-hidden border-t border-white/5 bg-[#0a0a0c]/95 backdrop-blur-xl"
+          >
+            <div className="max-w-7xl mx-auto px-4 py-3 space-y-1">
+              {dynamicMenuItems.map((item) => {
+                const itemPath = `/${item.key}`;
+                const isActive = item.key === '' ? pathname === '/' : pathname === itemPath;
+                const hasSubmenus = item.submenus.length > 0;
+                const isSubmenuOpen = mobileSubmenu === item.key;
+
+                return (
+                  <div key={item.key}>
+                    {/* Main Item */}
+                    <div className="flex items-center">
+                      <Link
+                        href={hasSubmenus ? '#' : `/${item.key}`}
+                        onClick={(e) => {
+                          if (hasSubmenus) {
+                            e.preventDefault();
+                            setMobileSubmenu(isSubmenuOpen ? null : item.key);
+                          } else {
+                            setMobileOpen(false);
+                            setMobileSubmenu(null);
+                          }
+                        }}
+                        className={`flex-1 flex items-center py-3 px-3 rounded-lg transition-colors text-sm font-semibold ${
+                          isActive
+                            ? 'text-primary bg-primary/10'
+                            : 'text-zinc-300 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {item.icon}
+                        <span>{item.label}</span>
+                        {hasSubmenus && (
+                          <ChevronDown size={14} className={`ml-auto transition-transform duration-200 ${isSubmenuOpen ? 'rotate-180' : ''}`} />
+                        )}
+                      </Link>
+                    </div>
+
+                    {/* Submenu Accordion */}
+                    <AnimatePresence>
+                      {hasSubmenus && isSubmenuOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pl-6 py-1 space-y-1">
+                            {item.submenus.map((sub, idx) => (
+                              <Link
+                                key={idx}
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (item.key === 'admin' && !pathname.startsWith('/admin')) {
+                                    window.location.href = `/admin?tab=${sub.action}`;
+                                  } else if (onMenuClick && sub.action) {
+                                    onMenuClick(item.key, sub.action);
+                                  }
+                                  setMobileOpen(false);
+                                  setMobileSubmenu(null);
+                                }}
+                                className="flex items-center py-2.5 px-3 rounded-lg text-zinc-400 hover:text-primary hover:bg-primary/5 transition-colors text-sm"
+                              >
+                                <span className="p-1 rounded-md bg-white/5 mr-3">{sub.icon}</span>
+                                <span className="font-mono text-xs">{sub.label}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+
+              {/* Mobile Logout */}
+              {session && (
+                <button
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = '/login';
+                  }}
+                  className="w-full mt-2 py-3 px-3 text-sm font-semibold text-red-400 border border-red-500/30 hover:bg-red-500/10 rounded-lg transition-colors font-mono tracking-wider text-left flex items-center"
+                >
+                  LOGOUT
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

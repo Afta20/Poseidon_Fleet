@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successEmail, setSuccessEmail] = useState('');
   const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -45,6 +46,7 @@ export default function RegisterPage() {
 
       const data = await res.json();
       if (data.success) {
+        setSuccessEmail(email); // simpan email sebelum di-clear
         setSuccess(true);
         // Clear form
         setName('');
@@ -97,7 +99,7 @@ export default function RegisterPage() {
           <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-center">
             <h3 className="text-green-400 font-bold mb-2">Registrasi Berhasil!</h3>
             <p className="text-green-500/80 text-sm">
-              Tautan verifikasi telah dikirim ke <span className="text-white font-bold">{email}</span>. 
+              Tautan verifikasi telah dikirim ke <span className="text-white font-bold">{successEmail}</span>. 
               Silakan cek kotak masuk atau folder spam Anda untuk mengaktifkan akun sebelum login.
             </p>
           </div>
