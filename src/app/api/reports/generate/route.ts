@@ -25,7 +25,15 @@ export async function POST(request: Request) {
 
     const prompt = `Analisis laporan ${timeframe} untuk armada kapal Poseidon Fleet.\n` +
       `Fokuskan laporan pada: konsumsi bahan bakar, log insiden (jika ada), dan performa rute keseluruhan.\n` +
-      `Buat laporan profesional dalam bahasa Indonesia yang terstruktur dengan format Markdown yang rapi (Gunakan subjudul, list, dll).\n\n` +
+      `Anda HARUS mengembalikan response STRICTLY dalam format JSON yang valid, tanpa markdown backticks (\`\`\`) atau teks di luar JSON.\n` +
+      `Gunakan struktur JSON berikut:\n` +
+      `{\n` +
+      `  "ringkasanEksekutif": "Ringkasan naratif 2-3 kalimat mengenai performa armada secara keseluruhan.",\n` +
+      `  "analisisBahanBakar": ["Poin analisis 1", "Poin analisis 2", ...],\n` +
+      `  "performaKapal": ["Poin performa 1", "Poin performa 2", ...],\n` +
+      `  "insidenDanSos": ["Poin insiden 1 (atau tulis 'Tidak ada insiden signifikan' jika aman)", ...],\n` +
+      `  "rekomendasi": ["Poin rekomendasi 1", "Poin rekomendasi 2", ...]\n` +
+      `}\n\n` +
       `Data operasional terakhir:\n${dataContext}`;
 
     const response = await ai.models.generateContent({
@@ -33,7 +41,17 @@ export async function POST(request: Request) {
         contents: prompt
     });
 
-    return NextResponse.json({ success: true, report: response.text });
+    let reportJson = null;
+    const aiText = response.text || '';
+    try {
+        const textStr = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+        reportJson = JSON.parse(textStr);
+    } catch (parseError) {
+        console.error("Failed to parse JSON from AI", aiText);
+        return NextResponse.json({ error: 'AI mengembalikan format yang tidak valid' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, report: reportJson });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Gagal membuat laporan dengan AI' }, { status: 500 });

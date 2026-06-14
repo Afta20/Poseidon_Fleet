@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSession } from '@/hooks/useSession';
 import { Megamenu } from '@/components/layout/Megamenu';
-import { ShieldAlert, Users, Anchor, BrainCircuit, Ship, Package } from 'lucide-react';
+import { ShieldAlert, Users, Anchor, BrainCircuit, Ship, Package, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { UserCrud } from '@/components/admin/UserCrud';
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
       }
     }
   }, []);
-  const [aiReport, setAiReport] = useState<string | null>(null);
+  const [aiReport, setAiReport] = useState<any | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
   const handleMenuClick = (key: string, action: string) => {
@@ -195,55 +195,89 @@ export default function AdminDashboard() {
                    </div>
                  </div>
                ) : aiReport ? (
-                 <div className="bg-[#0d0d12] rounded-xl border border-primary/20 overflow-hidden">
-                   {/* Terminal Header */}
-                   <div className="flex items-center justify-between px-5 py-3 bg-black/60 border-b border-white/5">
-                     <div className="flex items-center space-x-2">
-                       <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                       <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                       <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                 <div className="space-y-6">
+                   {/* Ringkasan Eksekutif */}
+                   <div className="bg-[#0d0d12] rounded-xl border border-primary/30 overflow-hidden glow-border">
+                     <div className="flex items-center px-5 py-3 bg-primary/10 border-b border-primary/20">
+                       <BrainCircuit size={18} className="text-primary mr-3" />
+                       <h3 className="font-bold text-primary font-mono tracking-widest uppercase text-sm">Ringkasan Eksekutif</h3>
                      </div>
-                     <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Gemini AI Report • Fleet Analytics</span>
-                     <span className="text-[10px] font-mono text-primary">✓ Complete</span>
+                     <div className="p-5 text-zinc-300 font-sans leading-relaxed text-sm">
+                       {aiReport.ringkasanEksekutif || "Tidak ada ringkasan tersedia."}
+                     </div>
                    </div>
 
-                   {/* Report Body */}
-                   <div className="p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
-                     <div className="font-mono text-sm leading-7 text-zinc-300 whitespace-pre-wrap">
-                       {aiReport.split('\n').map((line, i) => {
-                         // Section headers (lines starting with ##, **, or all caps)
-                         if (line.match(/^#{1,3}\s/) || line.match(/^\*\*.+\*\*$/)) {
-                           const cleanLine = line.replace(/^#{1,3}\s/, '').replace(/\*\*/g, '');
-                           return (
-                             <div key={i} className="text-primary font-bold text-base mt-4 mb-2 flex items-center border-b border-primary/20 pb-2">
-                               <span className="w-1 h-4 bg-primary rounded-full mr-3 shrink-0" />
-                               {cleanLine}
-                             </div>
-                           );
-                         }
-                         // Bullet points
-                         if (line.match(/^\s*[-•]\s/)) {
-                           return (
-                             <div key={i} className="flex items-start pl-4 py-0.5">
-                               <span className="text-primary mr-2 mt-1 shrink-0">›</span>
-                               <span className="text-zinc-300">{line.replace(/^\s*[-•]\s/, '')}</span>
-                             </div>
-                           );
-                         }
-                         // Numbered points
-                         if (line.match(/^\s*\d+\.\s/)) {
-                           return (
-                             <div key={i} className="flex items-start pl-4 py-0.5">
-                               <span className="text-emerald-400 mr-2 shrink-0 font-bold">{line.match(/^\s*(\d+)\./)?.[1]}.</span>
-                               <span className="text-zinc-300">{line.replace(/^\s*\d+\.\s/, '')}</span>
-                             </div>
-                           );
-                         }
-                         // Empty lines
-                         if (line.trim() === '') return <div key={i} className="h-3" />;
-                         // Normal text
-                         return <div key={i} className="text-zinc-400">{line}</div>;
-                       })}
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     {/* Analisis Bahan Bakar */}
+                     <div className="bg-[#0d0d12] rounded-xl border border-blue-500/30 overflow-hidden shadow-[0_0_15px_rgba(59,130,246,0.15)] flex flex-col">
+                       <div className="flex items-center px-5 py-3 bg-blue-500/10 border-b border-blue-500/20">
+                         <Zap size={18} className="text-blue-400 mr-3" />
+                         <h3 className="font-bold text-blue-400 font-mono tracking-widest uppercase text-sm">Analisis Bahan Bakar</h3>
+                       </div>
+                       <div className="p-5 flex-1">
+                         <ul className="space-y-3">
+                           {aiReport.analisisBahanBakar?.map((item: string, i: number) => (
+                             <li key={i} className="flex items-start text-zinc-300 text-sm">
+                               <span className="text-blue-500 mr-3 mt-0.5 font-bold">›</span>
+                               <span>{item}</span>
+                             </li>
+                           ))}
+                         </ul>
+                       </div>
+                     </div>
+
+                     {/* Performa Kapal */}
+                     <div className="bg-[#0d0d12] rounded-xl border border-emerald-500/30 overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.15)] flex flex-col">
+                       <div className="flex items-center px-5 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
+                         <Ship size={18} className="text-emerald-400 mr-3" />
+                         <h3 className="font-bold text-emerald-400 font-mono tracking-widest uppercase text-sm">Performa Armada</h3>
+                       </div>
+                       <div className="p-5 flex-1">
+                         <ul className="space-y-3">
+                           {aiReport.performaKapal?.map((item: string, i: number) => (
+                             <li key={i} className="flex items-start text-zinc-300 text-sm">
+                               <span className="text-emerald-500 mr-3 mt-0.5 font-bold">›</span>
+                               <span>{item}</span>
+                             </li>
+                           ))}
+                         </ul>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Insiden & SOS */}
+                   <div className="bg-[#0d0d12] rounded-xl border border-red-500/30 overflow-hidden shadow-[0_0_15px_rgba(239,68,68,0.15)]">
+                     <div className="flex items-center px-5 py-3 bg-red-500/10 border-b border-red-500/20">
+                       <ShieldAlert size={18} className="text-red-400 mr-3" />
+                       <h3 className="font-bold text-red-400 font-mono tracking-widest uppercase text-sm">Insiden & SOS</h3>
+                     </div>
+                     <div className="p-5">
+                       <ul className="space-y-3">
+                         {aiReport.insidenDanSos?.map((item: string, i: number) => (
+                           <li key={i} className="flex items-start text-zinc-300 text-sm">
+                             <span className="text-red-500 mr-3 mt-0.5 font-bold">›</span>
+                             <span>{item}</span>
+                           </li>
+                         ))}
+                       </ul>
+                     </div>
+                   </div>
+
+                   {/* Rekomendasi */}
+                   <div className="bg-[#0d0d12] rounded-xl border border-amber-500/30 overflow-hidden shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                     <div className="flex items-center px-5 py-3 bg-amber-500/10 border-b border-amber-500/20">
+                       <BrainCircuit size={18} className="text-amber-400 mr-3" />
+                       <h3 className="font-bold text-amber-400 font-mono tracking-widest uppercase text-sm">Rekomendasi Strategis</h3>
+                     </div>
+                     <div className="p-5">
+                       <ul className="space-y-3">
+                         {aiReport.rekomendasi?.map((item: string, i: number) => (
+                           <li key={i} className="flex items-start text-zinc-300 text-sm">
+                             <span className="text-amber-500 mr-3 mt-0.5 font-bold">›</span>
+                             <span>{item}</span>
+                           </li>
+                         ))}
+                       </ul>
                      </div>
                    </div>
                  </div>
