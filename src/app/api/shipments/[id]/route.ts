@@ -40,6 +40,19 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const data = await req.json();
 
+    const existingShipment = await db.shipment.findUnique({ where: { id } });
+    if (!existingShipment) return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+
+    const isLocked = ['APPROVED', 'IN_TRANSIT', 'ARRIVED'].includes(existingShipment.status);
+    
+    // Allow status and vesselId updates even if locked, but block full data edits
+    if (isLocked) {
+      const isTryingToEditData = Object.keys(data).some(key => !['status', 'vesselId', 'eventLocation', 'eventDescription'].includes(key));
+      if (isTryingToEditData) {
+        return NextResponse.json({ error: 'Pesanan yang sudah diproses tidak dapat diubah' }, { status: 403 });
+      }
+    }
+
     const updateData: any = {};
 
     // Status update
@@ -93,6 +106,14 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const { id } = await params;
     const session = await checkAdmin();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const shipment = await db.shipment.findUnique({ where: { id } });
+    if (!shipment) return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+
+    const isLocked = ['APPROVED', 'IN_TRANSIT', 'ARRIVED'].includes(shipment.status);
+    if (isLocked) {
+      return NextResponse.json({ error: 'Pesanan yang sudah diproses tidak dapat dihapus' }, { status: 403 });
+    }
 
     await db.shipment.delete({ where: { id } });
     return NextResponse.json({ success: true });

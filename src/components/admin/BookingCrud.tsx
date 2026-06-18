@@ -476,6 +476,7 @@ export const BookingCrud = () => {
                   const statusCfg = STATUS_CONFIG[s.status] || STATUS_CONFIG.PENDING;
                   const isExpanded = expandedId === s.id;
                   const vesselAssigned = s.vesselId ? getVesselName(s.vesselId) : null;
+                  const isLocked = ['APPROVED', 'IN_TRANSIT', 'ARRIVED'].includes(s.status);
 
                   return (
                      <div
@@ -522,16 +523,26 @@ export const BookingCrud = () => {
                            {/* Quick Actions (Edit / Delete) */}
                            <div className="flex gap-2 shrink-0">
                               <button
-                                 onClick={(e) => { e.stopPropagation(); handleEdit(s); }}
-                                 className="p-2 bg-zinc-800 hover:bg-primary/20 border border-transparent rounded-lg text-white transition-all"
-                                 title="Edit"
+                                 onClick={(e) => { e.stopPropagation(); if (!isLocked) handleEdit(s); }}
+                                 disabled={isLocked}
+                                 className={`p-2 border rounded-lg transition-all ${
+                                    isLocked 
+                                       ? 'bg-zinc-800/50 border-transparent text-zinc-600 cursor-not-allowed' 
+                                       : 'bg-zinc-800 hover:bg-primary/20 border-transparent text-white'
+                                 }`}
+                                 title={isLocked ? "Pesanan yang sudah diproses tidak dapat diubah" : "Edit"}
                               >
                                  <Pencil size={13} />
                               </button>
                               <button
-                                 onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: s.id, title: s.title }); }}
-                                 className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded-lg transition-all"
-                                 title="Hapus"
+                                 onClick={(e) => { e.stopPropagation(); if (!isLocked) setDeleteTarget({ id: s.id, title: s.title }); }}
+                                 disabled={isLocked}
+                                 className={`p-2 border rounded-lg transition-all ${
+                                    isLocked 
+                                       ? 'bg-zinc-800/30 border-transparent text-zinc-600 cursor-not-allowed' 
+                                       : 'bg-red-500/10 hover:bg-red-500/30 border-red-500/30 text-red-500'
+                                 }`}
+                                 title={isLocked ? "Pesanan yang sudah diproses tidak dapat dihapus" : "Hapus"}
                               >
                                  <Trash2 size={13} />
                               </button>
