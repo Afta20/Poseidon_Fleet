@@ -40,9 +40,9 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
     <main className="min-h-screen bg-[#0a0a0c] text-white">
       <Megamenu />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
-        <Link href="/" className="inline-flex items-center text-zinc-400 hover:text-white mb-8 transition-colors">
+        <Link href="/customer" className="inline-flex items-center text-zinc-400 hover:text-white mb-8 transition-colors">
           <ArrowLeft size={16} className="mr-2" />
-          Kembali ke Beranda
+          Kembali
         </Link>
         
         {!shipment ? (
