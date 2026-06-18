@@ -10,11 +10,11 @@ import { TableSkeleton } from '@/components/ui/TableSkeleton';
 const ITEMS_PER_PAGE = 5;
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-   PENDING: { label: 'Menunggu', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' },
-   APPROVED: { label: 'Disetujui', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
-   IN_TRANSIT: { label: 'Berlayar', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30' },
-   ARRIVED: { label: 'Tiba', color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30' },
-   REJECTED: { label: 'Ditolak', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' },
+   PENDING: { label: 'Pending', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' },
+   APPROVED: { label: 'Approved', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
+   IN_TRANSIT: { label: 'In Transit', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30' },
+   ARRIVED: { label: 'Arrived', color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30' },
+   REJECTED: { label: 'Rejected', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' },
 };
 
 const EMPTY_FORM = {
@@ -84,8 +84,8 @@ export const BookingCrud = () => {
       if (phone.startsWith('0')) {
          phone = '62' + phone.substring(1);
       }
-      const vesselText = vesselName ? `menggunakan armada kapal *${vesselName}*` : '';
-      const text = `Halo *${shipment.receiverName || 'Pelanggan'}*, pesanan kargo Anda dengan Resi *${shipment.id}* saat ini berstatus *${STATUS_CONFIG[shipment.status]?.label || shipment.status}* ${vesselText}.\n\nAda yang bisa kami bantu terkait pengiriman ini?`;
+      const vesselText = vesselName ? `using vessel *${vesselName}*` : '';
+      const text = `Hello *${shipment.receiverName || 'Customer'}*, your cargo booking with Tracking ID *${shipment.id}* is currently *${STATUS_CONFIG[shipment.status]?.label || shipment.status}* ${vesselText}.\n\nIs there anything we can help you with regarding this shipment?`;
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
    };
 
@@ -106,14 +106,14 @@ export const BookingCrud = () => {
       e.preventDefault();
 
       const errors: Record<string, string> = {};
-      if (!formData.title.trim()) errors.title = "Nama / Judul barang wajib diisi";
-      if (!formData.senderName.trim()) errors.senderName = "Nama pengirim wajib diisi";
-      if (!formData.receiverName.trim()) errors.receiverName = "Nama penerima wajib diisi";
-      if (!formData.phone.trim()) errors.phone = "No. Telepon wajib diisi";
-      if (!formData.origin.trim()) errors.origin = "Pelabuhan asal wajib diisi";
-      if (!formData.destination.trim()) errors.destination = "Pelabuhan tujuan wajib diisi";
-      if (!formData.weight) errors.weight = "Berat muatan wajib diisi";
-      if (!formData.customerId) errors.customerId = "Customer wajib dipilih";
+      if (!formData.title.trim()) errors.title = "Cargo title is required";
+      if (!formData.senderName.trim()) errors.senderName = "Sender name is required";
+      if (!formData.receiverName.trim()) errors.receiverName = "Receiver name is required";
+      if (!formData.phone.trim()) errors.phone = "Phone number is required";
+      if (!formData.origin.trim()) errors.origin = "Origin port is required";
+      if (!formData.destination.trim()) errors.destination = "Destination port is required";
+      if (!formData.weight) errors.weight = "Cargo weight is required";
+      if (!formData.customerId) errors.customerId = "Customer selection is required";
 
       if (Object.keys(errors).length > 0) {
          setFormErrors(errors);
@@ -136,18 +136,18 @@ export const BookingCrud = () => {
             body: JSON.stringify(payload)
          });
          if (res.ok) {
-            toast.success(isEditing ? 'Pesanan berhasil diperbarui' : 'Pesanan baru berhasil dibuat');
+            toast.success(isEditing ? 'Booking updated successfully' : 'New booking created successfully');
             setFormData({ ...EMPTY_FORM });
             setIsEditing(false);
             setShowForm(false);
             fetchData();
          } else {
             const err = await res.json();
-            toast.error(err.error || 'Gagal menyimpan data pesanan');
+            toast.error(err.error || 'Failed to save booking data');
          }
       } catch (e) {
          console.error(e);
-         toast.error('Terjadi kesalahan');
+         toast.error('An error occurred');
       } finally {
          setSubmitting(false);
       }
@@ -182,14 +182,14 @@ export const BookingCrud = () => {
       try {
          const res = await fetch(`/api/shipments/${id}`, { method: 'DELETE' });
          if (res.ok) {
-            toast.success(`Pesanan "${title}" berhasil dihapus`);
+            toast.success(`Booking "${title}" deleted successfully`);
             fetchData();
          } else {
             const err = await res.json();
-            toast.error(err.error || 'Gagal menghapus pesanan');
+            toast.error(err.error || 'Failed to delete booking');
          }
       } catch (e) {
-         toast.error('Terjadi kesalahan');
+         toast.error('An error occurred');
       }
    };
 
@@ -254,21 +254,21 @@ export const BookingCrud = () => {
             <div>
                <h2 className="text-2xl font-sans font-bold flex items-center">
                   <Package className="mr-3 text-primary" />
-                  Manajemen Pesanan Kargo
+                  Cargo Booking Management
                </h2>
-               <p className="text-zinc-500 text-sm mt-1">Kelola pesanan, assign armada, dan pantau pengiriman.</p>
+               <p className="text-zinc-500 text-sm mt-1">Manage bookings, assign vessels, and track shipments.</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
                <SearchInput
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  placeholder="Cari berdasarkan nama, resi, rute..."
+                  placeholder="Search by name, ID, route..."
                />
                <button
                   onClick={() => { setShowForm(true); setIsEditing(false); setFormData({ ...EMPTY_FORM }); }}
                   className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-all glow-border"
                >
-                  <Plus size={16} /> Tambah Pesanan
+                  <Plus size={16} /> Add Booking
                </button>
             </div>
          </div>
@@ -283,7 +283,7 @@ export const BookingCrud = () => {
                      : 'text-zinc-500 hover:text-white hover:bg-white/5'
                }`}
             >
-               Berjalan / Aktif
+               Active / In Progress
             </button>
             <button
                onClick={() => handleTabChange('selesai')}
@@ -293,7 +293,7 @@ export const BookingCrud = () => {
                      : 'text-zinc-500 hover:text-white hover:bg-white/5'
                }`}
             >
-               Selesai / Riwayat
+               Completed / History
             </button>
          </div>
 
@@ -304,11 +304,11 @@ export const BookingCrud = () => {
                   <h3 className="font-bold text-white font-mono text-sm uppercase tracking-widest flex items-center gap-2">
                      {isEditing ? (
                         <>
-                           <Pencil size={14} className="text-primary animate-pulse" /> Edit Data Pesanan
+                           <Pencil size={14} className="text-primary animate-pulse" /> Edit Booking Data
                         </>
                      ) : (
                         <>
-                           <Plus size={14} className="text-primary" /> Tambah Pesanan Baru
+                           <Plus size={14} className="text-primary" /> Add New Booking
                         </>
                      )}
                   </h3>
@@ -319,16 +319,16 @@ export const BookingCrud = () => {
                <form onSubmit={handleSubmit} noValidate className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                      <div>
-                        <label className={labelCls}>Nama / Jenis Barang *</label>
+                        <label className={labelCls}>Item Name / Cargo Title *</label>
                         <input type="text" required className={`${inputCls} ${formErrors.title ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.title}
-                           onChange={e => { setFormErrors(prev => ({...prev, title: ''})); setFormData({ ...formData, title: e.target.value }); }} placeholder="Misal: Mesin Pabrik" />
+                           onChange={e => { setFormErrors(prev => ({...prev, title: ''})); setFormData({ ...formData, title: e.target.value }); }} placeholder="e.g., Heavy Machinery" />
                         {formErrors.title && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.title}</p>}
                      </div>
                      <div>
-                        <label className={labelCls}>Customer / Akun Pemesan *</label>
+                        <label className={labelCls}>Customer Account *</label>
                         <select required className={`${inputCls} ${formErrors.customerId ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.customerId}
                            onChange={e => { setFormErrors(prev => ({...prev, customerId: ''})); setFormData({ ...formData, customerId: e.target.value }); }}>
-                           <option value="">Pilih Customer...</option>
+                           <option value="">Select Customer...</option>
                            {customers.map(c => (
                               <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
                            ))}
@@ -336,7 +336,7 @@ export const BookingCrud = () => {
                         {formErrors.customerId && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.customerId}</p>}
                      </div>
                      <div>
-                        <label className={labelCls}>Status Pengiriman *</label>
+                        <label className={labelCls}>Shipment Status *</label>
                         <select required className={inputCls} value={formData.status}
                            onChange={e => setFormData({ ...formData, status: e.target.value })}>
                            {Object.keys(STATUS_CONFIG).map(s => (
@@ -348,43 +348,43 @@ export const BookingCrud = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                      <div>
-                        <label className={labelCls}>Nama Pengirim *</label>
+                        <label className={labelCls}>Sender Name *</label>
                         <input type="text" required className={`${inputCls} ${formErrors.senderName ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.senderName}
-                           onChange={e => { setFormErrors(prev => ({...prev, senderName: ''})); setFormData({ ...formData, senderName: e.target.value }); }} placeholder="Nama Pengirim" />
+                           onChange={e => { setFormErrors(prev => ({...prev, senderName: ''})); setFormData({ ...formData, senderName: e.target.value }); }} placeholder="Sender Name" />
                         {formErrors.senderName && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.senderName}</p>}
                      </div>
                      <div>
-                        <label className={labelCls}>Nama Penerima *</label>
+                        <label className={labelCls}>Receiver Name *</label>
                         <input type="text" required className={`${inputCls} ${formErrors.receiverName ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.receiverName}
-                           onChange={e => { setFormErrors(prev => ({...prev, receiverName: ''})); setFormData({ ...formData, receiverName: e.target.value }); }} placeholder="Nama Penerima" />
+                           onChange={e => { setFormErrors(prev => ({...prev, receiverName: ''})); setFormData({ ...formData, receiverName: e.target.value }); }} placeholder="Receiver Name" />
                         {formErrors.receiverName && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.receiverName}</p>}
                      </div>
                      <div>
-                        <label className={labelCls}>No Telepon *</label>
-                        <input type="tel" required pattern="[0-9+\-\s]{10,15}" minLength={10} maxLength={15} title="Masukkan nomor telepon valid (10-15 digit angka)" className={`${inputCls} ${formErrors.phone ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.phone}
-                           onChange={e => { setFormErrors(prev => ({...prev, phone: ''})); setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') }); }} placeholder="08123456789" />
+                        <label className={labelCls}>Phone Number *</label>
+                        <input type="tel" required pattern="[0-9+\-\s]{10,15}" minLength={10} maxLength={15} title="Enter valid phone number (10-15 digits)" className={`${inputCls} ${formErrors.phone ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.phone}
+                           onChange={e => { setFormErrors(prev => ({...prev, phone: ''})); setFormData({ ...formData, phone: e.target.value.replace(/[^0-9+\-\s]/g, '') }); }} placeholder="+628123456789" />
                         {formErrors.phone && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.phone}</p>}
                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div>
-                        <label className={labelCls}>Pelabuhan Asal *</label>
+                        <label className={labelCls}>Origin Port *</label>
                         <input type="text" required className={`${inputCls} ${formErrors.origin ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.origin}
-                           onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); setFormData({ ...formData, origin: e.target.value }); }} placeholder="Tanjung Priok, Jakarta" />
+                           onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); setFormData({ ...formData, origin: e.target.value }); }} placeholder="e.g. Tanjung Priok, Jakarta" />
                         {formErrors.origin && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.origin}</p>}
                      </div>
                      <div>
-                        <label className={labelCls}>Pelabuhan Tujuan *</label>
+                        <label className={labelCls}>Destination Port *</label>
                         <input type="text" required className={`${inputCls} ${formErrors.destination ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.destination}
-                           onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); setFormData({ ...formData, destination: e.target.value }); }} placeholder="Tanjung Perak, Surabaya" />
+                           onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); setFormData({ ...formData, destination: e.target.value }); }} placeholder="e.g. Tanjung Perak, Surabaya" />
                         {formErrors.destination && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.destination}</p>}
                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                      <div>
-                        <label className={labelCls}>Berat Barang (Kg) *</label>
+                        <label className={labelCls}>Weight (Kg) *</label>
                         <input type="number" required min="1" className={`${inputCls} ${formErrors.weight ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.weight}
                            onChange={e => { setFormErrors(prev => ({...prev, weight: ''})); setFormData({ ...formData, weight: e.target.value }); }} placeholder="500" />
                         {formErrors.weight && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.weight}</p>}
@@ -395,7 +395,7 @@ export const BookingCrud = () => {
                            onChange={e => setFormData({ ...formData, volume: e.target.value })} placeholder="1.5" />
                      </div>
                      <div>
-                        <label className={labelCls}>Tipe Kontainer *</label>
+                        <label className={labelCls}>Container Type *</label>
                         <select required className={inputCls} value={formData.type}
                            onChange={e => setFormData({ ...formData, type: e.target.value })}>
                            <option value="LCL">LCL</option>
@@ -403,45 +403,45 @@ export const BookingCrud = () => {
                         </select>
                      </div>
                      <div>
-                        <label className={labelCls}>Jenis Layanan *</label>
+                        <label className={labelCls}>Service Type *</label>
                         <select required className={inputCls} value={formData.deliveryType}
                            onChange={e => setFormData({ ...formData, deliveryType: e.target.value })}>
-                           <option value="BIASA">Reguler (Biasa)</option>
-                           <option value="CEPAT">Express (Cepat)</option>
-                           <option value="VVIP">Priority (VVIP)</option>
+                           <option value="BIASA">Regular</option>
+                           <option value="CEPAT">Express</option>
+                           <option value="VVIP">Priority</option>
                         </select>
                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                      <div className="md:col-span-2">
-                        <label className={labelCls}>Deskripsi / Catatan Barang</label>
+                        <label className={labelCls}>Description / Notes</label>
                         <input type="text" className={inputCls} value={formData.description}
-                           onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Kondisi barang, dll." />
+                           onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Cargo conditions, etc." />
                      </div>
                      <div>
-                        <label className={labelCls}>Harga / Tarif Pengiriman (Rp)</label>
+                        <label className={labelCls}>Shipping Cost (Rp)</label>
                         <input type="number" className={inputCls} value={formData.cost}
-                           onChange={e => setFormData({ ...formData, cost: e.target.value })} placeholder="Akan dihitung otomatis jika kosong" />
+                           onChange={e => setFormData({ ...formData, cost: e.target.value })} placeholder="Calculated automatically if empty" />
                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div>
-                        <label className={labelCls}>Metode Pembayaran *</label>
+                        <label className={labelCls}>Payment Method *</label>
                         <select required className={inputCls} value={formData.paymentMethod}
                            onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })}>
-                           <option value="TRANSFER_BANK">Transfer Bank</option>
-                           <option value="E_WALLET">QRIS / E-Wallet</option>
-                           <option value="COD">Bayar di Pelabuhan (COD)</option>
+                           <option value="TRANSFER_BANK">Bank Transfer</option>
+                           <option value="E_WALLET">E-Wallet</option>
+                           <option value="COD">Pay at Port (COD)</option>
                         </select>
                      </div>
                      <div>
-                        <label className={labelCls}>Status Pembayaran *</label>
+                        <label className={labelCls}>Payment Status *</label>
                         <select required className={inputCls} value={formData.paymentStatus}
                            onChange={e => setFormData({ ...formData, paymentStatus: e.target.value })}>
-                           <option value="UNPAID">Belum Dibayar (UNPAID)</option>
-                           <option value="PAID">Sudah Dibayar (PAID)</option>
+                           <option value="UNPAID">Unpaid</option>
+                           <option value="PAID">Paid</option>
                         </select>
                      </div>
                   </div>
@@ -449,11 +449,11 @@ export const BookingCrud = () => {
                   <div className="flex gap-3 pt-2">
                      <button type="submit" disabled={submitting}
                         className="px-8 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-lg text-sm font-bold uppercase tracking-widest transition-all">
-                        {submitting ? 'Menyimpan...' : (isEditing ? 'Simpan Perubahan' : 'Tambah Pesanan')}
+                        {submitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Add Booking')}
                      </button>
                      <button type="button" onClick={handleCancel}
                         className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-bold uppercase tracking-widest transition-all">
-                        Batal
+                        Cancel
                      </button>
                   </div>
                </form>
@@ -467,7 +467,7 @@ export const BookingCrud = () => {
             <div className="text-center py-16 border border-white/10 border-dashed rounded-2xl">
                <Package size={48} className="mx-auto text-zinc-700 mb-4" />
                <p className="text-zinc-500 font-mono">
-                  {searchQuery ? `Tidak ditemukan untuk "${searchQuery}"` : 'Belum ada pesanan kargo.'}
+                  {searchQuery ? `No results found for "${searchQuery}"` : 'No cargo bookings yet.'}
                </p>
             </div>
          ) : (
@@ -496,7 +496,7 @@ export const BookingCrud = () => {
                            {/* Title & ID */}
                            <div className="min-w-0 flex-1" onClick={() => setExpandedId(isExpanded ? null : s.id)}>
                               <h3 className="font-bold text-white truncate">{s.title}</h3>
-                              <p className="text-[10px] text-zinc-600 font-mono mt-0.5 truncate">RESI: {s.id}</p>
+                              <p className="text-[10px] text-zinc-600 font-mono mt-0.5 truncate">TRACKING: {s.id}</p>
                            </div>
 
                            {/* Route */}
@@ -530,7 +530,7 @@ export const BookingCrud = () => {
                                        ? 'bg-zinc-800/50 border-transparent text-zinc-600 cursor-not-allowed' 
                                        : 'bg-zinc-800 hover:bg-primary/20 border-transparent text-white'
                                  }`}
-                                 title={isLocked ? "Pesanan yang sudah diproses tidak dapat diubah" : "Edit"}
+                                 title={isLocked ? "Processed bookings cannot be edited" : "Edit"}
                               >
                                  <Pencil size={13} />
                               </button>
@@ -542,7 +542,7 @@ export const BookingCrud = () => {
                                        ? 'bg-zinc-800/30 border-transparent text-zinc-600 cursor-not-allowed' 
                                        : 'bg-red-500/10 hover:bg-red-500/30 border-red-500/30 text-red-500'
                                  }`}
-                                 title={isLocked ? "Pesanan yang sudah diproses tidak dapat dihapus" : "Hapus"}
+                                 title={isLocked ? "Processed bookings cannot be deleted" : "Delete"}
                               >
                                  <Trash2 size={13} />
                               </button>
@@ -555,42 +555,42 @@ export const BookingCrud = () => {
                               {/* Info Grid */}
                               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-5">
                                  <div>
-                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Pengirim & Penerima</p>
-                                    <p className="text-xs text-white"><span className="text-zinc-500">Dari:</span> {s.senderName || '—'}</p>
-                                    <p className="text-xs text-white mt-0.5"><span className="text-zinc-500">Untuk:</span> {s.receiverName || '—'}</p>
+                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Sender & Receiver</p>
+                                    <p className="text-xs text-white"><span className="text-zinc-500">From:</span> {s.senderName || '—'}</p>
+                                    <p className="text-xs text-white mt-0.5"><span className="text-zinc-500">To:</span> {s.receiverName || '—'}</p>
                                     <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1"><Phone size={10} className="text-zinc-500" /> {s.phone || '—'}</p>
                                  </div>
                                  <div>
-                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Rute & Layanan</p>
+                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Route & Service</p>
                                     <p className="text-xs text-white">{s.origin} → {s.destination}</p>
-                                    <p className="text-xs text-amber-400 mt-0.5 font-semibold flex items-center gap-1"><Zap size={10} className="text-amber-400 animate-pulse" /> Layanan: {s.deliveryType}</p>
+                                    <p className="text-xs text-amber-400 mt-0.5 font-semibold flex items-center gap-1"><Zap size={10} className="text-amber-400 animate-pulse" /> Service: {s.deliveryType}</p>
                                  </div>
                                  <div>
-                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Detail Muatan</p>
+                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Cargo Details</p>
                                     <p className="text-xs text-white flex items-center gap-1"><Weight size={11} className="text-zinc-500" /> {s.weight} Kg</p>
                                     {s.volume && <p className="text-xs text-zinc-500 mt-0.5">Volume: {s.volume} m³</p>}
-                                    <p className="text-xs text-zinc-500 font-mono">Tipe: {s.type}</p>
+                                    <p className="text-xs text-zinc-500 font-mono">Type: {s.type}</p>
                                  </div>
                                  <div>
-                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Biaya & Pembayaran</p>
+                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Cost & Payment</p>
                                     <p className="text-xs text-emerald-400 font-mono font-bold">
                                        Rp {s.cost ? s.cost.toLocaleString('id-ID') : '0'}
                                     </p>
                                      <p className="text-[10px] text-zinc-400 mt-0.5 flex items-center gap-1">
-                                        <Banknote size={10} className="text-zinc-500" /> {s.paymentMethod === 'TRANSFER_BANK' ? 'Transfer Bank' : s.paymentMethod === 'E_WALLET' ? 'QRIS / E-Wallet' : 'COD (Cash)'}
+                                        <Banknote size={10} className="text-zinc-500" /> {s.paymentMethod === 'TRANSFER_BANK' ? 'Bank Transfer' : s.paymentMethod === 'E_WALLET' ? 'E-Wallet' : 'COD (Cash)'}
                                      </p>
                                     <span className={`inline-block text-[9px] font-mono font-bold px-1.5 py-0.5 rounded mt-1.5 ${s.paymentStatus === 'PAID' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
                                        {s.paymentStatus === 'PAID' ? '✓ PAID' : '✗ UNPAID'}
                                     </span>
                                  </div>
                                  <div>
-                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Armada Kapal</p>
+                                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Assigned Vessel</p>
                                     {vesselAssigned ? (
                                        <p className="text-xs text-cyan-400 flex items-center gap-1 font-medium">
                                           <Ship size={11} /> {vesselAssigned}
                                        </p>
                                     ) : (
-                                       <p className="text-xs text-zinc-500 italic">Belum di-assign</p>
+                                       <p className="text-xs text-zinc-500 italic">Unassigned</p>
                                     )}
                                  </div>
                               </div>
@@ -600,13 +600,13 @@ export const BookingCrud = () => {
                                  <div className="bg-[#0d0d12] rounded-xl border border-white/5 p-4">
                                     {s.status === 'PENDING' && (
                                        <div>
-                                          <p className="text-xs text-zinc-500 mb-3 font-mono uppercase tracking-widest flex items-center gap-1"><Anchor size={11} className="text-zinc-500" /> Konfirmasi Pesanan</p>
+                                          <p className="text-xs text-zinc-500 mb-3 font-mono uppercase tracking-widest flex items-center gap-1"><Anchor size={11} className="text-zinc-500" /> Confirm Booking</p>
                                           {!(s.paymentMethod === 'COD' || s.paymentStatus === 'PAID') && (
                                              <div className="mb-3 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2.5 text-amber-400 text-xs shadow-[0_0_15px_rgba(251,191,36,0.1)]">
                                                 <AlertTriangle size={14} className="mt-0.5 shrink-0" /> 
                                                 <div>
-                                                   <span className="font-bold block mb-0.5">Pembayaran Tertunda</span>
-                                                   <span className="opacity-80">Pesanan Transfer/QRIS harus ditandai Lunas terlebih dahulu sebelum di-approve.</span>
+                                                   <span className="font-bold block mb-0.5">Payment Pending</span>
+                                                   <span className="opacity-80">Transfer/E-Wallet bookings must be marked as Paid before approval.</span>
                                                 </div>
                                              </div>
                                           )}
@@ -635,7 +635,7 @@ export const BookingCrud = () => {
                                     {s.status === 'APPROVED' && (
                                        <div>
                                           <p className="text-xs text-zinc-500 mb-3 font-mono uppercase tracking-widest">
-                                             <Ship size={12} className="inline mr-1" /> Assign Armada Kapal
+                                             <Ship size={12} className="inline mr-1" /> Assign Vessel
                                           </p>
                                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-3">
                                              {vessels.map(v => (
@@ -669,14 +669,14 @@ export const BookingCrud = () => {
                                                    onClick={() => updateStatus(s.id, 'IN_TRANSIT')}
                                                    className="flex items-center gap-2 px-6 py-2.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
                                                 >
-                                                   <Navigation size={14} /> Berangkatkan Kapal
+                                                   <Navigation size={14} /> Dispatch Vessel
                                                 </button>
                                                 {s.phone && (
                                                    <button
                                                       onClick={() => handleWhatsApp(s, vesselAssigned)}
                                                       className="flex items-center gap-2 px-6 py-2.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(37,211,102,0.2)]"
                                                    >
-                                                      <MessageCircle size={14} /> Chat WA Customer
+                                                      <MessageCircle size={14} /> Chat Customer
                                                    </button>
                                                 )}
                                              </div>
@@ -687,7 +687,7 @@ export const BookingCrud = () => {
                                     {s.status === 'IN_TRANSIT' && (
                                        <div>
                                           <p className="text-xs text-zinc-500 mb-3 font-mono uppercase tracking-widest">
-                                             <Anchor size={12} className="inline mr-1" /> Kapal Sedang Berlayar
+                                             <Anchor size={12} className="inline mr-1" /> Vessel In Transit
                                           </p>
                                           {vesselAssigned && (
                                              <p className="text-sm text-cyan-400 mb-3 flex items-center gap-2">
@@ -702,14 +702,14 @@ export const BookingCrud = () => {
                                                 onClick={() => updateStatus(s.id, 'ARRIVED')}
                                                 className="flex items-center gap-2 px-6 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(74,222,128,0.2)]"
                                              >
-                                                <Check size={14} /> Tandai Sudah Tiba
+                                                <Check size={14} /> Mark as Arrived
                                              </button>
                                              {s.phone && (
                                                 <button
                                                    onClick={() => handleWhatsApp(s, vesselAssigned)}
                                                    className="flex items-center gap-2 px-6 py-2.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 rounded-lg text-sm font-bold transition-all hover:shadow-[0_0_15px_rgba(37,211,102,0.2)]"
                                                 >
-                                                   <MessageCircle size={14} /> Chat WA Customer
+                                                   <MessageCircle size={14} /> Chat Customer
                                                 </button>
                                              )}
                                           </div>
@@ -722,8 +722,8 @@ export const BookingCrud = () => {
                                              <Check size={18} />
                                           </div>
                                           <div>
-                                             <p className="font-bold text-sm">Pengiriman Selesai</p>
-                                             <p className="text-xs text-zinc-500">Muatan telah sampai di {s.destination}</p>
+                                             <p className="font-bold text-sm">Shipment Completed</p>
+                                             <p className="text-xs text-zinc-500">Cargo has arrived at {s.destination}</p>
                                           </div>
                                        </div>
                                     )}
@@ -734,8 +734,8 @@ export const BookingCrud = () => {
                                              <X size={18} />
                                           </div>
                                           <div>
-                                             <p className="font-bold text-sm">Pesanan Ditolak</p>
-                                             <p className="text-xs text-zinc-500">Pesanan ini telah ditolak oleh admin</p>
+                                             <p className="font-bold text-sm">Booking Rejected</p>
+                                             <p className="text-xs text-zinc-500">This booking was rejected by admin</p>
                                           </div>
                                        </div>
                                     )}
@@ -743,9 +743,9 @@ export const BookingCrud = () => {
                                     {/* Quick Payment Action Toggle */}
                                     <div className="border-t border-white/5 pt-4 mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-zinc-500 font-mono uppercase tracking-widest flex items-center gap-1"><Banknote size={11} className="text-zinc-500" /> Status Pembayaran:</span>
+                                          <span className="text-xs text-zinc-500 font-mono uppercase tracking-widest flex items-center gap-1"><Banknote size={11} className="text-zinc-500" /> Payment Status:</span>
                                           <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full ${s.paymentStatus === 'PAID' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                             {s.paymentStatus === 'PAID' ? '✓ PAID (LUNAS)' : '✗ UNPAID (BELUM BAYAR)'}
+                                             {s.paymentStatus === 'PAID' ? '✓ PAID' : '✗ UNPAID'}
                                           </span>
                                        </div>
                                        {!(s.paymentStatus === 'PAID' && ['IN_TRANSIT', 'ARRIVED', 'REJECTED'].includes(s.status)) && (
@@ -760,7 +760,7 @@ export const BookingCrud = () => {
                                              }}
                                              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${s.paymentStatus === 'PAID' ? 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20'}`}
                                           >
-                                             {s.paymentStatus === 'PAID' ? 'Tandai Belum Lunas' : 'Tandai Sudah Bayar (Lunas)'}
+                                             {s.paymentStatus === 'PAID' ? 'Mark as Unpaid' : 'Mark as Paid'}
                                           </button>
                                        )}
                                     </div>
@@ -788,7 +788,7 @@ export const BookingCrud = () => {
             isOpen={!!deleteTarget}
             onClose={() => setDeleteTarget(null)}
             onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id, deleteTarget.title); }}
-            title="Hapus Pesanan Kargo"
+            title="Delete Cargo Booking"
             itemName={deleteTarget?.title}
          />
       </div>

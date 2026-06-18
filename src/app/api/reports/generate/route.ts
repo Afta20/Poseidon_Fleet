@@ -23,18 +23,19 @@ export async function POST(request: Request) {
       logs: logs.map(l => ({ vesselName: l.vessel.name, fuelLevel: l.fuelLevel, speed: l.speed, incident: l.incident, timestamp: l.timestamp }))
     });
 
-    const prompt = `Analisis laporan ${timeframe} untuk armada kapal Poseidon Fleet.\n` +
-      `Fokuskan laporan pada: konsumsi bahan bakar, log insiden (jika ada), dan performa rute keseluruhan.\n` +
-      `Anda HARUS mengembalikan response STRICTLY dalam format JSON yang valid, tanpa markdown backticks (\`\`\`) atau teks di luar JSON.\n` +
-      `Gunakan struktur JSON berikut:\n` +
+    const prompt = `Analyze the ${timeframe} report for the Poseidon Fleet vessels.\n` +
+      `Focus the report on: fuel consumption, incident logs (if any), and overall route performance.\n` +
+      `You MUST return the response STRICTLY in valid JSON format, without markdown backticks (\`\`\`) or text outside the JSON.\n` +
+      `Use the following JSON structure:\n` +
       `{\n` +
-      `  "ringkasanEksekutif": "Ringkasan naratif 2-3 kalimat mengenai performa armada secara keseluruhan.",\n` +
-      `  "analisisBahanBakar": ["Poin analisis 1", "Poin analisis 2", ...],\n` +
-      `  "performaKapal": ["Poin performa 1", "Poin performa 2", ...],\n` +
-      `  "insidenDanSos": ["Poin insiden 1 (atau tulis 'Tidak ada insiden signifikan' jika aman)", ...],\n` +
-      `  "rekomendasi": ["Poin rekomendasi 1", "Poin rekomendasi 2", ...]\n` +
+      `  "executiveSummary": "A 2-3 sentence narrative summary of the overall fleet performance.",\n` +
+      `  "fuelAnalysis": ["Analysis point 1", "Analysis point 2", ...],\n` +
+      `  "vesselPerformance": ["Performance point 1", "Performance point 2", ...],\n` +
+      `  "incidentsAndSos": ["Incident point 1 (or write 'No significant incidents' if safe)", ...],\n` +
+      `  "recommendations": ["Recommendation point 1", "Recommendation point 2", ...]\n` +
       `}\n\n` +
-      `Data operasional terakhir:\n${dataContext}`;
+      `All output values should be in English.\n\n` +
+      `Recent operational data:\n${dataContext}`;
 
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',

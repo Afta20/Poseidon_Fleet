@@ -41,10 +41,10 @@ export const UserCrud = () => {
       e.preventDefault();
 
       const errors: Record<string, string> = {};
-      if (!formData.name.trim()) errors.name = "Nama lengkap wajib diisi";
-      if (!formData.email.trim()) errors.email = "Email wajib diisi";
-      if (!isEditing && !formData.password) errors.password = "Password wajib diisi";
-      if (!formData.role) errors.role = "Role wajib dipilih";
+      if (!formData.name.trim()) errors.name = "Full name is required";
+      if (!formData.email.trim()) errors.email = "Email is required";
+      if (!isEditing && !formData.password) errors.password = "Password is required";
+      if (!formData.role) errors.role = "Role is required";
 
       if (Object.keys(errors).length > 0) {
          setFormErrors(errors);
@@ -60,13 +60,13 @@ export const UserCrud = () => {
          body: JSON.stringify(formData)
       });
       if (res.ok) {
-         toast.success(isEditing ? 'User berhasil diperbarui' : 'User baru berhasil didaftarkan');
+         toast.success(isEditing ? 'User updated successfully' : 'New user registered successfully');
          setFormData({ email: '', name: '', password: '', role: 'CUSTOMER', id: '' });
          setIsEditing(false);
          fetchUsers();
       } else {
          const err = await res.json();
-         toast.error(err.error || 'Gagal menyimpan user');
+         toast.error(err.error || 'Failed to save user');
       }
    };
 
@@ -79,11 +79,11 @@ export const UserCrud = () => {
    const handleDelete = async (id: string) => {
       const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
       if (res.ok) {
-         toast.success('User berhasil dihapus');
+         toast.success('User deleted successfully');
          fetchUsers();
       } else {
          const err = await res.json();
-         toast.error(err.error || 'Gagal menghapus user');
+         toast.error(err.error || 'Failed to delete user');
       }
    };
 
@@ -205,7 +205,7 @@ export const UserCrud = () => {
                         : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
                   }`}
                >
-                  Customer / Pelanggan ({users.filter(u => u.role === 'CUSTOMER').length})
+                  Customer ({users.filter(u => u.role === 'CUSTOMER').length})
                </button>
             </div>
 
@@ -243,7 +243,7 @@ export const UserCrud = () => {
                                  <button
                                     onClick={() => handleViewHistory(user)}
                                     className="p-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 rounded transition-colors"
-                                    title="Lihat Riwayat Booking"
+                                    title="View Booking History"
                                  >
                                     <History size={14} />
                                  </button>
@@ -281,7 +281,7 @@ export const UserCrud = () => {
                      <div>
                         <h3 className="font-bold text-white text-lg flex items-center gap-2">
                            <History className="text-primary" size={18} />
-                           Riwayat Booking: <span className="text-primary font-mono">{historyUser.name}</span>
+                           Booking History: <span className="text-primary font-mono">{historyUser.name}</span>
                         </h3>
                         <p className="text-xs text-zinc-500 mt-1">{historyUser.email}</p>
                      </div>
@@ -298,11 +298,11 @@ export const UserCrud = () => {
                      {loadingShipments ? (
                         <div className="py-20 flex flex-col items-center justify-center">
                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
-                           <p className="text-sm text-zinc-500 font-mono">Mengambil riwayat kargo...</p>
+                           <p className="text-sm text-zinc-500 font-mono">Fetching booking history...</p>
                         </div>
                      ) : shipments.length === 0 ? (
                         <div className="text-center py-20 text-zinc-500 font-mono border border-dashed border-white/5 rounded-xl bg-black/10">
-                           Belum ada riwayat booking untuk pelanggan ini.
+                           No booking history found for this customer.
                         </div>
                      ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -323,10 +323,10 @@ export const UserCrud = () => {
                                     </span>
                                  </div>
                                  <div className="text-xs text-zinc-400 space-y-1">
-                                    <p className="flex justify-between"><span className="text-zinc-600">Rute:</span> <span>{s.origin} → {s.destination}</span></p>
-                                    <p className="flex justify-between"><span className="text-zinc-600">Berat/Vol:</span> <span>{s.weight} Kg {s.volume ? `• ${s.volume} m³` : ''}</span></p>
-                                    <p className="flex justify-between"><span className="text-zinc-600">Biaya:</span> <span className="text-emerald-400 font-mono font-bold">Rp {s.cost ? s.cost.toLocaleString('id-ID') : '0'}</span></p>
-                                    <p className="flex justify-between"><span className="text-zinc-600">Pembayaran:</span> <span className={`font-bold ${s.paymentStatus === 'PAID' ? 'text-green-400' : 'text-red-400'}`}>{s.paymentStatus === 'PAID' ? '✓ PAID' : '✗ UNPAID'}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-600">Route:</span> <span>{s.origin} → {s.destination}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-600">Weight/Vol:</span> <span>{s.weight} Kg {s.volume ? `• ${s.volume} m³` : ''}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-600">Cost:</span> <span className="text-emerald-400 font-mono font-bold">Rp {s.cost ? s.cost.toLocaleString('id-ID') : '0'}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-600">Payment:</span> <span className={`font-bold ${s.paymentStatus === 'PAID' ? 'text-green-400' : 'text-red-400'}`}>{s.paymentStatus === 'PAID' ? '✓ PAID' : '✗ UNPAID'}</span></p>
                                  </div>
                               </div>
                            ))}
@@ -340,7 +340,7 @@ export const UserCrud = () => {
             isOpen={!!deleteTarget}
             onClose={() => setDeleteTarget(null)}
             onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id); }}
-            title="Hapus User"
+            title="Delete User"
             itemName={deleteTarget?.name}
          />
       </div>

@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         setAiReport(data.report);
         toast.success("Report generated successfully");
       } else {
-        toast.error(data.error || "Gagal meng-generate report");
+        toast.error(data.error || "Failed to generate report");
       }
     } catch (e) {
       toast.error("Error generating report");
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('vessels')} 
             className={`pb-4 px-2 font-mono uppercase tracking-wider transition-colors ${activeTab === 'vessels' ? 'border-b-2 border-primary text-primary' : 'text-zinc-500 hover:text-white'}`}
           >
-            <Ship size={16} className="inline mr-2" /> Armada
+            <Ship size={16} className="inline mr-2" /> Fleet
           </button>
           <button 
             onClick={() => setActiveTab('bookings')} 
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
                        AI Studio Analytics
                      </h2>
                      <p className="text-zinc-400 text-sm mt-2 max-w-lg">
-                       Powered by Gemini AI — Analisis otomatis performa armada, efisiensi bahan bakar, dan optimasi rute pelayaran.
+                       Powered by Gemini AI — Automated fleet performance analysis, fuel efficiency, and routing optimization.
                      </p>
                    </div>
                    <button 
@@ -196,27 +196,27 @@ export default function AdminDashboard() {
                  </div>
                ) : aiReport ? (
                  <div className="space-y-6">
-                   {/* Ringkasan Eksekutif */}
+                   {/* Executive Summary */}
                    <div className="bg-[#0d0d12] rounded-xl border border-primary/30 overflow-hidden glow-border">
                      <div className="flex items-center px-5 py-3 bg-primary/10 border-b border-primary/20">
                        <BrainCircuit size={18} className="text-primary mr-3" />
-                       <h3 className="font-bold text-primary font-mono tracking-widest uppercase text-sm">Ringkasan Eksekutif</h3>
+                       <h3 className="font-bold text-primary font-mono tracking-widest uppercase text-sm">Executive Summary</h3>
                      </div>
                      <div className="p-5 text-zinc-300 font-sans leading-relaxed text-sm">
-                       {aiReport.ringkasanEksekutif || "Tidak ada ringkasan tersedia."}
+                       {aiReport.executiveSummary || "No summary available."}
                      </div>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     {/* Analisis Bahan Bakar */}
+                     {/* Fuel Analysis */}
                      <div className="bg-[#0d0d12] rounded-xl border border-blue-500/30 overflow-hidden shadow-[0_0_15px_rgba(59,130,246,0.15)] flex flex-col">
                        <div className="flex items-center px-5 py-3 bg-blue-500/10 border-b border-blue-500/20">
                          <Zap size={18} className="text-blue-400 mr-3" />
-                         <h3 className="font-bold text-blue-400 font-mono tracking-widest uppercase text-sm">Analisis Bahan Bakar</h3>
+                         <h3 className="font-bold text-blue-400 font-mono tracking-widest uppercase text-sm">Fuel Analysis</h3>
                        </div>
                        <div className="p-5 flex-1">
                          <ul className="space-y-3">
-                           {aiReport.analisisBahanBakar?.map((item: string, i: number) => (
+                           {aiReport.fuelAnalysis?.map((item: string, i: number) => (
                              <li key={i} className="flex items-start text-zinc-300 text-sm">
                                <span className="text-blue-500 mr-3 mt-0.5 font-bold">›</span>
                                <span>{item}</span>
@@ -226,15 +226,15 @@ export default function AdminDashboard() {
                        </div>
                      </div>
 
-                     {/* Performa Kapal */}
+                     {/* Fleet Performance */}
                      <div className="bg-[#0d0d12] rounded-xl border border-emerald-500/30 overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.15)] flex flex-col">
                        <div className="flex items-center px-5 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
                          <Ship size={18} className="text-emerald-400 mr-3" />
-                         <h3 className="font-bold text-emerald-400 font-mono tracking-widest uppercase text-sm">Performa Armada</h3>
+                         <h3 className="font-bold text-emerald-400 font-mono tracking-widest uppercase text-sm">Fleet Performance</h3>
                        </div>
                        <div className="p-5 flex-1">
                          <ul className="space-y-3">
-                           {aiReport.performaKapal?.map((item: string, i: number) => (
+                           {aiReport.vesselPerformance?.map((item: string, i: number) => (
                              <li key={i} className="flex items-start text-zinc-300 text-sm">
                                <span className="text-emerald-500 mr-3 mt-0.5 font-bold">›</span>
                                <span>{item}</span>
@@ -245,15 +245,15 @@ export default function AdminDashboard() {
                      </div>
                    </div>
 
-                   {/* Insiden & SOS */}
+                   {/* Incidents & SOS */}
                    <div className="bg-[#0d0d12] rounded-xl border border-red-500/30 overflow-hidden shadow-[0_0_15px_rgba(239,68,68,0.15)]">
                      <div className="flex items-center px-5 py-3 bg-red-500/10 border-b border-red-500/20">
                        <ShieldAlert size={18} className="text-red-400 mr-3" />
-                       <h3 className="font-bold text-red-400 font-mono tracking-widest uppercase text-sm">Insiden & SOS</h3>
+                       <h3 className="font-bold text-red-400 font-mono tracking-widest uppercase text-sm">Incidents & SOS</h3>
                      </div>
                      <div className="p-5">
                        <ul className="space-y-3">
-                         {aiReport.insidenDanSos?.map((item: string, i: number) => (
+                         {aiReport.incidentsAndSos?.map((item: string, i: number) => (
                            <li key={i} className="flex items-start text-zinc-300 text-sm">
                              <span className="text-red-500 mr-3 mt-0.5 font-bold">›</span>
                              <span>{item}</span>
@@ -263,15 +263,15 @@ export default function AdminDashboard() {
                      </div>
                    </div>
 
-                   {/* Rekomendasi */}
-                   <div className="bg-[#0d0d12] rounded-xl border border-amber-500/30 overflow-hidden shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-                     <div className="flex items-center px-5 py-3 bg-amber-500/10 border-b border-amber-500/20">
-                       <BrainCircuit size={18} className="text-amber-400 mr-3" />
-                       <h3 className="font-bold text-amber-400 font-mono tracking-widest uppercase text-sm">Rekomendasi Strategis</h3>
+                   {/* AI Recommendations */}
+                   <div className="bg-[#0d0d12] rounded-xl border border-purple-500/30 overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+                     <div className="flex items-center px-5 py-3 bg-purple-500/10 border-b border-purple-500/20">
+                       <BrainCircuit size={18} className="text-purple-400 mr-3" />
+                       <h3 className="font-bold text-purple-400 font-mono tracking-widest uppercase text-sm">AI Recommendations</h3>
                      </div>
                      <div className="p-5">
                        <ul className="space-y-3">
-                         {aiReport.rekomendasi?.map((item: string, i: number) => (
+                         {aiReport.recommendations?.map((item: string, i: number) => (
                            <li key={i} className="flex items-start text-zinc-300 text-sm">
                              <span className="text-amber-500 mr-3 mt-0.5 font-bold">›</span>
                              <span>{item}</span>
@@ -293,9 +293,9 @@ export default function AdminDashboard() {
                      <div className="w-20 h-20 rounded-full border-2 border-dashed border-zinc-800" />
                      <BrainCircuit size={28} className="absolute inset-0 m-auto text-zinc-700" />
                    </motion.div>
-                   <h3 className="text-lg font-bold text-zinc-500 mb-2">Belum Ada Laporan</h3>
+                   <h3 className="text-lg font-bold text-zinc-500 mb-2">No Reports Yet</h3>
                    <p className="text-zinc-600 text-sm max-w-md text-center font-sans">
-                     Klik tombol <span className="text-primary font-semibold">"Generate Report"</span> di atas untuk memulai analisis kinerja armada secara otomatis menggunakan AI.
+                     Click the <span className="text-primary font-semibold">"Generate Report"</span> button above to automatically start analyzing fleet performance using AI.
                    </p>
                  </div>
                )}

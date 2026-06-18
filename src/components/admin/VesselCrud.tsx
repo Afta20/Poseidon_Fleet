@@ -60,12 +60,12 @@ export const VesselCrud = () => {
     e.preventDefault();
 
     const errors: Record<string, string> = {};
-    if (!formData.name.trim()) errors.name = "Nama Kapal wajib diisi";
-    if (!formData.type) errors.type = "Jenis Kapal wajib dipilih";
-    if (!formData.status) errors.status = "Status Kapal wajib dipilih";
-    if (!formData.plateCode.trim()) errors.plateCode = "Plat Nomor wajib diisi";
-    if (!formData.capacity.toString().trim()) errors.capacity = "Kapasitas wajib diisi";
-    if (!formData.payload.trim()) errors.payload = "Deskripsi / Muatan wajib diisi";
+    if (!formData.name.trim()) errors.name = "Vessel name is required";
+    if (!formData.type) errors.type = "Vessel type is required";
+    if (!formData.status) errors.status = "Vessel status is required";
+    if (!formData.plateCode.trim()) errors.plateCode = "Plate/Reg code is required";
+    if (!formData.capacity.toString().trim()) errors.capacity = "Capacity is required";
+    if (!formData.payload.trim()) errors.payload = "Payload description is required";
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -82,18 +82,18 @@ export const VesselCrud = () => {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
-        toast.success(isEditing ? 'Data kapal diperbarui!' : 'Kapal baru berhasil ditambahkan!');
+        toast.success(isEditing ? 'Vessel data updated!' : 'New vessel added successfully!');
         setFormData({ ...EMPTY_FORM });
         setIsEditing(false);
         setShowForm(false);
         fetchData();
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Gagal menyimpan data kapal');
+        toast.error(err.error || 'Failed to save vessel data');
       }
     } catch (e) {
       console.error(e);
-      toast.error('Terjadi kesalahan');
+      toast.error('An error occurred');
     } finally {
       setSubmitting(false);
     }
@@ -117,14 +117,14 @@ export const VesselCrud = () => {
     try {
       const res = await fetch(`/api/vessels/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success(`Kapal "${name}" berhasil dihapus`);
+        toast.success(`Vessel "${name}" deleted successfully`);
         fetchData();
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Gagal menghapus kapal');
+        toast.error(err.error || 'Failed to delete vessel');
       }
     } catch (e) {
-      toast.error('Terjadi kesalahan');
+      toast.error('An error occurred');
     }
   };
 
@@ -162,15 +162,15 @@ export const VesselCrud = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-sans font-bold flex items-center">
-            <Ship className="mr-3 text-primary" /> Manajemen Armada Kapal
+            <Ship className="mr-3 text-primary" /> Fleet Management
           </h2>
-          <p className="text-zinc-500 text-sm mt-1">Kelola data kapal, kapasitas, dan status operasional.</p>
+          <p className="text-zinc-500 text-sm mt-1">Manage vessel data, capacities, and operational status.</p>
         </div>
         <button
           onClick={() => { setShowForm(true); setIsEditing(false); setFormData({ ...EMPTY_FORM }); }}
           className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-all glow-border"
         >
-          <Plus size={16} /> Tambah Kapal
+          <Plus size={16} /> Add Vessel
         </button>
       </div>
 
@@ -181,11 +181,11 @@ export const VesselCrud = () => {
             <h3 className="font-bold text-white font-mono text-sm uppercase tracking-widest flex items-center gap-2">
               {isEditing ? (
                 <>
-                  <Pencil size={14} className="text-primary animate-pulse" /> Edit Data Kapal
+                  <Pencil size={14} className="text-primary animate-pulse" /> Edit Vessel Data
                 </>
               ) : (
                 <>
-                  <Plus size={14} className="text-primary" /> Tambah Kapal Baru
+                  <Plus size={14} className="text-primary" /> Add New Vessel
                 </>
               )}
             </h3>
@@ -195,57 +195,57 @@ export const VesselCrud = () => {
           </div>
           <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className={labelCls}>Nama Kapal *</label>
+              <label className={labelCls}>Vessel Name *</label>
               <input
                 type="text"
                 required
                 className={`${inputCls} ${formErrors.name ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.name}
                 onChange={e => { setFormErrors(prev => ({...prev, name: ''})); setFormData({ ...formData, name: e.target.value }); }}
-                placeholder="Misal: Poseidon Alpha"
+                placeholder="e.g. Poseidon Alpha"
               />
               {formErrors.name && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.name}</p>}
             </div>
             <div>
-              <label className={labelCls}>Jenis Kendaraan *</label>
+              <label className={labelCls}>Vessel Type *</label>
               <select
                 required
                 className={`${inputCls} ${formErrors.type ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.type}
                 onChange={e => { setFormErrors(prev => ({...prev, type: ''})); setFormData({ ...formData, type: e.target.value }); }}
               >
-                <option value="">Pilih Jenis</option>
+                <option value="">Select Type</option>
                 {VESSEL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
               {formErrors.type && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.type}</p>}
             </div>
             <div>
-              <label className={labelCls}>Status Kendaraan *</label>
+              <label className={labelCls}>Vessel Status *</label>
               <select
                 required
                 className={`${inputCls} ${formErrors.status ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.status}
                 onChange={e => { setFormErrors(prev => ({...prev, status: ''})); setFormData({ ...formData, status: e.target.value }); }}
               >
-                <option value="">Pilih Status</option>
+                <option value="">Select Status</option>
                 {VESSEL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               {formErrors.status && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.status}</p>}
             </div>
             <div>
-              <label className={labelCls}>Plat Nomor / Kode Kendaraan *</label>
+              <label className={labelCls}>Plate / Reg Code *</label>
               <input
                 type="text"
                 required
                 className={`${inputCls} ${formErrors.plateCode ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.plateCode}
                 onChange={e => { setFormErrors(prev => ({...prev, plateCode: ''})); setFormData({ ...formData, plateCode: e.target.value }); }}
-                placeholder="Misal: IMO-1234567"
+                placeholder="e.g. IMO-1234567"
               />
               {formErrors.plateCode && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.plateCode}</p>}
             </div>
             <div>
-              <label className={labelCls}>Kapasitas Muatan (Ton) *</label>
+              <label className={labelCls}>Payload Capacity (Tons) *</label>
               <input
                 type="number"
                 required
@@ -254,19 +254,19 @@ export const VesselCrud = () => {
                 className={`${inputCls} ${formErrors.capacity ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.capacity}
                 onChange={e => { setFormErrors(prev => ({...prev, capacity: ''})); setFormData({ ...formData, capacity: e.target.value }); }}
-                placeholder="Misal: 5000"
+                placeholder="e.g. 5000"
               />
               {formErrors.capacity && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.capacity}</p>}
             </div>
             <div>
-              <label className={labelCls}>Deskripsi / Muatan Saat Ini *</label>
+              <label className={labelCls}>Current Payload / Description *</label>
               <input
                 type="text"
                 required
                 className={`${inputCls} ${formErrors.payload ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.payload}
                 onChange={e => { setFormErrors(prev => ({...prev, payload: ''})); setFormData({ ...formData, payload: e.target.value }); }}
-                placeholder="Misal: Kontainer elektronik"
+                placeholder="e.g. Electronics container"
               />
               {formErrors.payload && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.payload}</p>}
             </div>
@@ -276,14 +276,14 @@ export const VesselCrud = () => {
                 disabled={submitting}
                 className="px-8 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-lg text-sm font-bold uppercase tracking-widest transition-all"
               >
-                {submitting ? 'Menyimpan...' : (isEditing ? 'Simpan Perubahan' : 'Tambah Kapal')}
+                {submitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Add Vessel')}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
                 className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-bold uppercase tracking-widest transition-all"
               >
-                Batal
+                Cancel
               </button>
             </div>
           </form>
@@ -295,7 +295,7 @@ export const VesselCrud = () => {
         <SearchInput
           value={searchQuery}
           onChange={handleSearchChange}
-          placeholder="Cari nama kapal, tipe, kode..."
+          placeholder="Search vessel name, type, code..."
         />
       </div>
 
@@ -306,7 +306,7 @@ export const VesselCrud = () => {
         <div className="text-center py-16 border border-white/10 border-dashed rounded-2xl">
           <Ship size={48} className="mx-auto text-zinc-700 mb-4" />
           <p className="text-zinc-500 font-mono">
-            {searchQuery ? `Tidak ditemukan untuk "${searchQuery}"` : 'Belum ada data armada kapal.'}
+            {searchQuery ? `No results found for "${searchQuery}"` : 'No vessel data available.'}
           </p>
         </div>
       ) : (
@@ -315,12 +315,12 @@ export const VesselCrud = () => {
             <table className="w-full text-left text-sm text-zinc-400">
               <thead className="bg-black/40 text-zinc-300 uppercase font-mono text-xs">
                 <tr>
-                  <th className="px-5 py-4">Nama Kapal</th>
-                  <th className="px-5 py-4">Jenis</th>
-                  <th className="px-5 py-4">Kode/Plat</th>
-                  <th className="px-5 py-4">Kapasitas</th>
+                  <th className="px-5 py-4">Vessel Name</th>
+                  <th className="px-5 py-4">Type</th>
+                  <th className="px-5 py-4">Reg/Plate</th>
+                  <th className="px-5 py-4">Capacity</th>
                   <th className="px-5 py-4">Status</th>
-                  <th className="px-5 py-4 text-right">Aksi</th>
+                  <th className="px-5 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -371,7 +371,7 @@ export const VesselCrud = () => {
                           <button
                             onClick={() => setDeleteTarget({ id: vessel.id, name: vessel.name })}
                             className="p-2 bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 text-red-500 rounded-lg transition-all"
-                            title="Hapus"
+                            title="Delete"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -400,7 +400,7 @@ export const VesselCrud = () => {
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id, deleteTarget.name); }}
-        title="Hapus Kapal"
+        title="Delete Vessel"
         itemName={deleteTarget?.name}
       />
     </div>

@@ -61,7 +61,7 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
     // Admin internal view
     dynamicMenuItems = [{
       key: 'dashboard',
-      label: 'Kembali ke Dashboard',
+      label: 'Back to Dashboard',
       icon: <Navigation size={18} className="mr-2" />,
       submenus: []
     }];
@@ -83,7 +83,7 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
         submenus: [
           { label: 'Manage Crew', icon: <Anchor size={14} className="mr-2" />, action: 'crew' },
           { label: 'Manage Users', icon: <MapIcon size={14} className="mr-2" />, action: 'users' },
-          { label: 'Bookings / Kargo', icon: <Package size={14} className="mr-2" />, action: 'bookings' },
+          { label: 'Manage Bookings', icon: <Package size={14} className="mr-2" />, action: 'bookings' },
           { label: 'AI Reports', icon: <BarChart3 size={14} className="mr-2" />, action: 'reports' },
         ]
       });

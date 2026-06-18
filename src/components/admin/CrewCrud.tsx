@@ -45,8 +45,8 @@ export const CrewCrud = () => {
       e.preventDefault();
 
       const errors: Record<string, string> = {};
-      if (!formData.name.trim()) errors.name = "Nama crew wajib diisi";
-      if (!formData.position) errors.position = "Posisi/Role wajib dipilih";
+      if (!formData.name.trim()) errors.name = "Crew name is required";
+      if (!formData.position) errors.position = "Position is required";
 
       if (Object.keys(errors).length > 0) {
          setFormErrors(errors);
@@ -61,13 +61,13 @@ export const CrewCrud = () => {
          body: JSON.stringify(formData)
       });
       if (res.ok) {
-         toast.success(isEditing ? 'Data crew berhasil diperbarui' : 'Crew baru berhasil ditugaskan');
+         toast.success(isEditing ? 'Crew updated successfully' : 'New crew assigned successfully');
          setFormData({ name: '', position: 'Captain', vesselId: '', userId: '', id: '' });
          setIsEditing(false);
          fetchData();
       } else {
          const err = await res.json();
-         toast.error(err.error || 'Gagal menyimpan crew');
+         toast.error(err.error || 'Failed to save crew');
       }
    };
 
@@ -80,10 +80,10 @@ export const CrewCrud = () => {
    const handleDelete = async (id: string) => {
       const res = await fetch(`/api/crew/${id}`, { method: 'DELETE' });
       if (res.ok) {
-         toast.success('Crew berhasil dihapus');
+         toast.success('Crew deleted successfully');
          fetchData();
       } else {
-         toast.error('Gagal menghapus crew');
+         toast.error('Failed to delete crew');
       }
    };
 
@@ -212,7 +212,7 @@ export const CrewCrud = () => {
             isOpen={!!deleteTarget}
             onClose={() => setDeleteTarget(null)}
             onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget.id); }}
-            title="Hapus Crew Member"
+            title="Delete Crew Member"
             itemName={deleteTarget?.name}
          />
       </div>
