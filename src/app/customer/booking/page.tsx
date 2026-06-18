@@ -140,6 +140,15 @@ export default function BookingPage() {
   }, [portSearch]);
 
   const pickPort = (portName: string) => {
+    if (portTarget === 'origin' && portName === formData.destination) {
+      toast.error('Pelabuhan asal tidak boleh sama dengan pelabuhan tujuan.');
+      return;
+    }
+    if (portTarget === 'destination' && portName === formData.origin) {
+      toast.error('Pelabuhan tujuan tidak boleh sama dengan pelabuhan asal.');
+      return;
+    }
+
     set(portTarget, portName);
     setShowPorts(false);
     setPortSearch('');
@@ -154,6 +163,9 @@ export default function BookingPage() {
     if (!formData.weight || Number(formData.weight) <= 0) errors.weight = "Berat muatan wajib diisi";
     if (!formData.origin) errors.origin = "Pilih pelabuhan asal";
     if (!formData.destination) errors.destination = "Pilih pelabuhan tujuan";
+    if (formData.origin && formData.destination && formData.origin === formData.destination) {
+      errors.destination = "Pelabuhan asal dan tujuan tidak boleh sama";
+    }
     if (!formData.senderName.trim()) errors.senderName = "Nama pengirim wajib diisi";
     if (!formData.receiverName.trim()) errors.receiverName = "Nama penerima wajib diisi";
     const phoneRegex = /^[0-9+\-\s]{10,15}$/;
@@ -306,9 +318,9 @@ export default function BookingPage() {
                   <label className={labelCls}>Pelabuhan Asal *</label>
                   <div className="relative">
                     <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500" />
-                    <input required type="text" className={`${inputCls} pl-9 ${formErrors.origin ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.origin}
-                      onChange={e => { setFormErrors(prev => ({...prev, origin: ''})); set('origin', e.target.value); }} placeholder="Tanjung Priok, Jakarta"
-                      onFocus={() => { setPortTarget('origin'); setShowPorts(true); }} />
+                    <input required type="text" readOnly className={`${inputCls} pl-9 cursor-pointer ${formErrors.origin ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.origin}
+                      placeholder="Klik untuk pilih pelabuhan asal"
+                      onClick={() => { setPortTarget('origin'); setShowPorts(true); }} />
                   </div>
                   {formErrors.origin && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.origin}</p>}
                 </div>
@@ -316,9 +328,9 @@ export default function BookingPage() {
                   <label className={labelCls}>Pelabuhan Tujuan *</label>
                   <div className="relative">
                     <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400" />
-                    <input required type="text" className={`${inputCls} pl-9 ${formErrors.destination ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.destination}
-                      onChange={e => { setFormErrors(prev => ({...prev, destination: ''})); set('destination', e.target.value); }} placeholder="Tanjung Perak, Surabaya"
-                      onFocus={() => { setPortTarget('destination'); setShowPorts(true); }} />
+                    <input required type="text" readOnly className={`${inputCls} pl-9 cursor-pointer ${formErrors.destination ? 'border-red-500/50 bg-red-500/5' : ''}`} value={formData.destination}
+                      placeholder="Klik untuk pilih pelabuhan tujuan"
+                      onClick={() => { setPortTarget('destination'); setShowPorts(true); }} />
                   </div>
                   {formErrors.destination && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.destination}</p>}
                 </div>
