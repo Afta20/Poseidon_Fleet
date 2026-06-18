@@ -64,7 +64,7 @@ export default function LoginPage() {
         className="absolute top-8 left-8 flex items-center space-x-2 text-zinc-500 hover:text-white transition-colors group"
       >
         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-        <span className="text-xs font-mono uppercase tracking-widest">Back to Port</span>
+        <span className="text-xs font-mono uppercase tracking-widest">Kembali ke Beranda</span>
       </Link>
       {/* Top Header */}
       <div className="flex flex-col items-center mb-8">
@@ -79,7 +79,7 @@ export default function LoginPage() {
 
       {/* Login Card */}
       <div className="w-full max-w-md bg-[#121217] border border-white/5 rounded-xl p-8 shadow-2xl relative">
-        <h2 className="text-xl font-mono text-zinc-200 mb-8 tracking-wide">Access Terminal</h2>
+        <h2 className="text-xl font-mono text-zinc-200 mb-8 tracking-wide">Terminal Akses</h2>
 
         {error && (
           <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs font-mono">
@@ -90,7 +90,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} noValidate className="space-y-6">
           {/* Username */}
           <div>
-            <label className="text-xs text-zinc-400 tracking-wider mb-2 block font-sans">Username</label>
+            <label className="text-xs text-zinc-400 tracking-wider mb-2 block font-sans">Email / Username</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
               <input 
@@ -107,7 +107,7 @@ export default function LoginPage() {
 
           {/* Password */}
           <div>
-            <label className="text-xs text-zinc-400 tracking-wider mb-2 block font-sans">Password</label>
+            <label className="text-xs text-zinc-400 tracking-wider mb-2 block font-sans">Kata Sandi</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
               <input 
@@ -136,10 +136,10 @@ export default function LoginPage() {
                    <span className="w-2 h-2 rounded bg-primary" />
                  )}
               </div>
-              <span className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors">Remember me</span>
+              <span className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors">Ingat saya</span>
             </label>
             <Link href="/forgot-password" className="text-xs text-primary/80 hover:text-primary transition-colors">
-              Forgot Password?
+              Lupa Kata Sandi?
             </Link>
           </div>
 
@@ -149,7 +149,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-[#9f54ff] hover:bg-[#b06fff] text-white font-sans font-bold py-3 pt-4 pb-3 rounded-lg mt-6 tracking-widest transition-colors shadow-[0_0_15px_rgba(159,84,255,0.2)] disabled:opacity-70 text-sm"
           >
-            {loading ? 'AUTHENTICATING...' : 'LOGIN'}
+            {loading ? 'MEMVERIFIKASI...' : 'MASUK'}
           </button>
         </form>
 
@@ -165,7 +165,7 @@ export default function LoginPage() {
 
         {/* Footer info line inside card */}
         <div className="mt-6 text-center flex flex-col space-y-1">
-          <span className="text-[10px] text-zinc-600 tracking-widest uppercase">Secure Connection Established</span>
+          <span className="text-[10px] text-zinc-600 tracking-widest uppercase">Koneksi Aman Tersambung</span>
           <span className="text-[10px] text-zinc-700 tracking-widest">v2.1.4 • Node: PRIME-AUTH-01</span>
         </div>
       </div>
