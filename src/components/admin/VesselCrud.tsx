@@ -63,6 +63,9 @@ export const VesselCrud = () => {
     if (!formData.name.trim()) errors.name = "Nama Kapal wajib diisi";
     if (!formData.type) errors.type = "Jenis Kapal wajib dipilih";
     if (!formData.status) errors.status = "Status Kapal wajib dipilih";
+    if (!formData.plateCode.trim()) errors.plateCode = "Plat Nomor wajib diisi";
+    if (!formData.capacity.toString().trim()) errors.capacity = "Kapasitas wajib diisi";
+    if (!formData.payload.trim()) errors.payload = "Deskripsi / Muatan wajib diisi";
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -230,36 +233,42 @@ export const VesselCrud = () => {
               {formErrors.status && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.status}</p>}
             </div>
             <div>
-              <label className={labelCls}>Plat Nomor / Kode Kendaraan</label>
+              <label className={labelCls}>Plat Nomor / Kode Kendaraan *</label>
               <input
                 type="text"
-                className={inputCls}
+                required
+                className={`${inputCls} ${formErrors.plateCode ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.plateCode}
-                onChange={e => setFormData({ ...formData, plateCode: e.target.value })}
+                onChange={e => { setFormErrors(prev => ({...prev, plateCode: ''})); setFormData({ ...formData, plateCode: e.target.value }); }}
                 placeholder="Misal: IMO-1234567"
               />
+              {formErrors.plateCode && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.plateCode}</p>}
             </div>
             <div>
-              <label className={labelCls}>Kapasitas Muatan (Ton)</label>
+              <label className={labelCls}>Kapasitas Muatan (Ton) *</label>
               <input
                 type="number"
+                required
                 min="0"
                 step="0.1"
-                className={inputCls}
+                className={`${inputCls} ${formErrors.capacity ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.capacity}
-                onChange={e => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={e => { setFormErrors(prev => ({...prev, capacity: ''})); setFormData({ ...formData, capacity: e.target.value }); }}
                 placeholder="Misal: 5000"
               />
+              {formErrors.capacity && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.capacity}</p>}
             </div>
             <div>
-              <label className={labelCls}>Deskripsi / Muatan Saat Ini</label>
+              <label className={labelCls}>Deskripsi / Muatan Saat Ini *</label>
               <input
                 type="text"
-                className={inputCls}
+                required
+                className={`${inputCls} ${formErrors.payload ? 'border-red-500/50 bg-red-500/5' : ''}`}
                 value={formData.payload}
-                onChange={e => setFormData({ ...formData, payload: e.target.value })}
+                onChange={e => { setFormErrors(prev => ({...prev, payload: ''})); setFormData({ ...formData, payload: e.target.value }); }}
                 placeholder="Misal: Kontainer elektronik"
               />
+              {formErrors.payload && <p className="text-[11px] text-red-400 mt-2 font-mono flex items-center gap-1.5 animate-in fade-in"><span className="w-1 h-1 rounded-full bg-red-500"></span>{formErrors.payload}</p>}
             </div>
             <div className="sm:col-span-2 lg:col-span-3 flex gap-3 pt-2">
               <button
