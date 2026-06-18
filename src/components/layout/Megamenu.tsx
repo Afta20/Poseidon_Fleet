@@ -65,7 +65,7 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
       icon: <Navigation size={18} className="mr-2" />,
       submenus: []
     }];
-  } else if (pathname.startsWith('/customer')) {
+  } else if (pathname.startsWith('/customer') || session?.role === 'CUSTOMER') {
     // Customer portal menu
     dynamicMenuItems = [
       { key: 'customer', label: 'Dashboard Saya', icon: <Package size={18} className="mr-2" />, submenus: [] },
@@ -93,9 +93,6 @@ export const Megamenu: React.FC<MegamenuProps> = ({ onMenuClick }) => {
     dynamicMenuItems = [
       { key: 'calculator', label: 'Estimasi Tarif', icon: <Calculator size={18} className="mr-2" />, submenus: [] },
     ];
-    if (session?.role === 'CUSTOMER') {
-      dynamicMenuItems.push({ key: 'customer', label: 'Dashboard Saya', icon: <Package size={18} className="mr-2" />, submenus: [] });
-    }
   }
 
   // Prepend Home link to all modes to allow easy return to landing page
