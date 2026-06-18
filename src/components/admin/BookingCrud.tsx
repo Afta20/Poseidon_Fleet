@@ -748,19 +748,21 @@ export const BookingCrud = () => {
                                              {s.paymentStatus === 'PAID' ? '✓ PAID (LUNAS)' : '✗ UNPAID (BELUM BAYAR)'}
                                           </span>
                                        </div>
-                                       <button
-                                          onClick={async () => {
-                                             await fetch(`/api/shipments/${s.id}`, {
-                                                method: 'PUT',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ paymentStatus: s.paymentStatus === 'PAID' ? 'UNPAID' : 'PAID' })
-                                             });
-                                             fetchData();
-                                          }}
-                                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${s.paymentStatus === 'PAID' ? 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20'}`}
-                                       >
-                                          {s.paymentStatus === 'PAID' ? 'Tandai Belum Lunas' : 'Tandai Sudah Bayar (Lunas)'}
-                                       </button>
+                                       {!(s.paymentStatus === 'PAID' && ['IN_TRANSIT', 'ARRIVED', 'REJECTED'].includes(s.status)) && (
+                                          <button
+                                             onClick={async () => {
+                                                await fetch(`/api/shipments/${s.id}`, {
+                                                   method: 'PUT',
+                                                   headers: { 'Content-Type': 'application/json' },
+                                                   body: JSON.stringify({ paymentStatus: s.paymentStatus === 'PAID' ? 'UNPAID' : 'PAID' })
+                                                });
+                                                fetchData();
+                                             }}
+                                             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${s.paymentStatus === 'PAID' ? 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20'}`}
+                                          >
+                                             {s.paymentStatus === 'PAID' ? 'Tandai Belum Lunas' : 'Tandai Sudah Bayar (Lunas)'}
+                                          </button>
+                                       )}
                                     </div>
                                  </div>
                               </div>
